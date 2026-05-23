@@ -1,0 +1,6 @@
+cluster_label,n_samples,proportion,top_feature_1,top_feature_2,top_feature_3
+0.0,5529.0,0.7679166666666667,river_count,mean_x,center_count
+1.0,666.0,0.0925,base_count,blue_base_count,mean_y
+2.0,399.0,0.0554166666666666,red_side_count,lane_count_bot,bot_lane_count
+3.0,357.0,0.0495833333333333,bot_lane_count,lane_count_bot,mean_y
+4.0,249.0,0.0345833333333333,red_side_count,mean_x,river_count

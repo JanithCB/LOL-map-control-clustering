@@ -1,0 +1,44 @@
+# configs/macro_config.yaml
+# This configuration assumes a Kaggle-style ranked-games schema similar to the
+# Datasnaek League of Legends ranked dataset. If your local CSV uses different
+# headers, update the column mappings below to match your file. [web:43][web:199]
+
+dataset:
+  dataset_name: "League of Legends Ranked Games"
+  description: "Configuration for extracting match-level macro statistics from ranked games."
+
+columns:
+  game_id: "gameId"
+  game_duration: "gameDuration"
+  winner: "winner"
+  t1_tower_kills: "t1_towerKills"
+  t2_tower_kills: "t2_towerKills"
+  t1_dragon_kills: "t1_dragonKills"
+  t2_dragon_kills: "t2_dragonKills"
+  t1_baron_kills: "t1_baronKills"
+  t2_baron_kills: "t2_baronKills"
+  t1_inhibitor_kills: "t1_inhibitorKills"
+  t2_inhibitor_kills: "t2_inhibitorKills"
+  t1_rift_herald_kills: "t1_riftHeraldKills"
+  t2_rift_herald_kills: "t2_riftHeraldKills"
+  first_blood: "firstBlood"
+  first_tower: "firstTower"
+  first_inhibitor: "firstInhibitor"
+  first_baron: "firstBaron"
+  first_dragon: "firstDragon"
+  first_rift_herald: "firstRiftHerald"
+
+feature_engineering:
+  compute_total_objectives: true
+  compute_objective_differentials: true
+  compute_kills_per_minute: true
+  compute_total_kills_per_minute: true
+  compute_duration_bins: true
+  duration_bin_edges: [0, 1500, 2100, 2700, 999999]
+  duration_bin_labels: ["short", "standard", "long", "very_long"]
+  derive_macro_style_labels: true
+
+outputs:
+  save_match_level_macro: true
+  save_macro_summary: true
+  save_macro_style_summary: true

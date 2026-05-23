@@ -65,6 +65,31 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Directory for clustering plots.",
     )
     parser.add_argument(
+        "--run-macro-analysis",
+        action="store_true",
+        help="Run macro feature analysis on ranked games data.",
+    )
+    parser.add_argument(
+        "--ranked-games-csv",
+        default="data/raw/games.csv",
+        help="Path to ranked games CSV file.",
+    )
+    parser.add_argument(
+        "--macro-config",
+        default="configs/macro_config.yaml",
+        help="Path to macro configuration YAML.",
+    )
+    parser.add_argument(
+        "--macro-output-dir",
+        default="outputs/reports/macro",
+        help="Directory for macro outputs.",
+    )
+    parser.add_argument(
+        "--comparison-output-dir",
+        default="outputs/reports/comparison",
+        help="Directory for clustering vs macro comparison outputs.",
+    )
+    parser.add_argument(
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -196,6 +221,62 @@ def main() -> None:
         print("\nSaved clustering plots:")
         for key, path in plot_paths.items():
             print(f"- {key}: {path}")
+
+    if getattr(args, "run_macro_analysis", False):
+        LOGGER.info("Starting optional macro feature analysis stage")
+        from src.data.load_ranked_data import load_and_validate_ranked_games
+        from src.features.macro_features import (
+            compute_match_macro_features,
+            derive_macro_style_labels,
+            summarize_macro_features,
+            summarize_macro_styles,
+            save_macro_outputs,
+        )
+
+        ranked_df, macro_config = load_and_validate_ranked_games(
+            args.ranked_games_csv, args.macro_config
+        )
+        
+        column_map = macro_config.get("columns", {})
+        macro_features_df = compute_match_macro_features(ranked_df, column_map, macro_config)
+        style_df = derive_macro_style_labels(macro_features_df)
+        
+        macro_summary_df = summarize_macro_features(style_df)
+        style_summaries = summarize_macro_styles(style_df)
+        
+        macro_paths = save_macro_outputs(
+            macro_features_df, 
+            macro_summary_df, 
+            style_summaries, 
+            output_dir=args.macro_output_dir
+        )
+        print("\nMacro analysis completed successfully.")
+        for key, path in macro_paths.items():
+            print(f"- {key}: {path}")
+            
+        if args.run_clustering:
+            LOGGER.info("Starting qualitative comparison stage")
+            from src.comparison.compare_clusters_macro import (
+                load_minimap_cluster_outputs,
+                summarize_minimap_clusters_for_comparison,
+                summarize_macro_styles_for_comparison,
+                build_qualitative_comparison_notes,
+                save_comparison_outputs
+            )
+            sizes_path = Path(args.clustering_output_dir) / "cluster_sizes.csv"
+            top_feats_path = Path(args.clustering_output_dir) / "cluster_top_features.csv"
+            
+            c_sizes, c_top_feats = load_minimap_cluster_outputs(sizes_path, top_feats_path)
+            c_summary = summarize_minimap_clusters_for_comparison(c_sizes, c_top_feats)
+            m_summary = summarize_macro_styles_for_comparison(style_df)
+            notes_df = build_qualitative_comparison_notes(c_summary, m_summary)
+            
+            comp_paths = save_comparison_outputs(
+                c_summary, m_summary, notes_df, output_dir=args.comparison_output_dir
+            )
+            print("\nComparison completed successfully.")
+            for key, path in comp_paths.items():
+                print(f"- {key}: {path}")
 
 
 if __name__ == "__main__":

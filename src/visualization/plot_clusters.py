@@ -28,7 +28,10 @@ def plot_cluster_counts(clustered_df: pd.DataFrame, output_path: str | Path) -> 
     counts = clustered_df["cluster_label"].value_counts().sort_index()
 
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.bar(counts.index.astype(str), counts.values)
+    x_positions = np.arange(len(counts))
+    ax.bar(x_positions, counts.values)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels([str(label) for label in counts.index])
     ax.set_title("Cluster Counts")
     ax.set_xlabel("Cluster Label")
     ax.set_ylabel("Number of Samples")

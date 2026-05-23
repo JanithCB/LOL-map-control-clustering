@@ -1,0 +1,10 @@
+category,value,count,proportion
+objective_focus,objective_light,29118,0.5655078656049718
+objective_focus,objective_heavy,22372,0.43449213439502815
+neutral_focus,dragon_focused,48386,0.9397164497960769
+neutral_focus,balanced,3027,0.058788114196931446
+neutral_focus,baron_focused,77,0.001495436006991649
+game_length_style,standard,25188,0.4891823655078656
+game_length_style,long,12496,0.24268790056321615
+game_length_style,short,11731,0.2278306467275199
+game_length_style,very_long,2075,0.04029908720139833

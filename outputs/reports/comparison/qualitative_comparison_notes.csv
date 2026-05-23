@@ -1,0 +1,5 @@
+comparison_axis,minimap_view,ranked_macro_view,interpretation_note
+Grouping/Spread Patterns vs Game Pace,Clusters showing tight 3-5 man groups vs spread 1-1-1-2 lanes.,High objective taking and quick game lengths vs slow scaling.,"Early grouping may correlate with shorter 'snowball' games, but strict causal links require match-level alignment."
+Bot-side Control vs Dragon Focus,Clusters with high champion counts in bot lane and bot river.,Matches categorized as 'dragon_focused' in neutral focus.,A strong bot-side minimap presence typically supports dragon-heavy match outcomes.
+Lane Control vs Objective Totals,High lane presence vs high jungle/roaming presence.,Objective_heavy vs objective_light matches.,Matches with many objectives may feature map states with less strict laning and more roaming.
+Base/Defensive Patterns vs Game Length,Clusters showing champions grouped near own base.,Matches categorized as 'long' or 'very_long'.,Late-game states naturally pull teams toward base defense/sieging.
