@@ -1,0 +1,54 @@
+# Map Zone Definitions
+# Coordinates in normalized [0, 1] x [0, 1] minimap space
+# Origin (0,0) = top-left of minimap
+# (1,1) = bottom-right of minimap
+#
+# Each zone is defined as a rectangle [x_min, y_min, x_max, y_max]
+# or a polygon as a list of (x, y) vertices.
+
+zones:
+  # TODO: Define zone coordinates based on minimap layout
+  top_lane:
+    type: rectangle
+    coords: []  # [x_min, y_min, x_max, y_max]
+
+  mid_lane:
+    type: rectangle
+    coords: []
+
+  bot_lane:
+    type: rectangle
+    coords: []
+
+  blue_jungle:
+    type: polygon
+    coords: []  # list of [x, y] vertices
+
+  red_jungle:
+    type: polygon
+    coords: []
+
+  river:
+    type: polygon
+    coords: []
+
+  dragon_pit:
+    type: rectangle
+    coords: []
+
+  baron_pit:
+    type: rectangle
+    coords: []
+
+  blue_base:
+    type: rectangle
+    coords: []
+
+  red_base:
+    type: rectangle
+    coords: []
+
+# Map halves for side-pressure calculation
+map_halves:
+  blue_half_y_threshold: 0.5  # y > threshold = blue side
+  red_half_y_threshold: 0.5   # y < threshold = red side

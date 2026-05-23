@@ -1,0 +1,37 @@
+# Python Dependencies for LoL Macro Playstyle Clustering Project
+
+# Core data science
+numpy
+pandas
+scipy
+
+# Machine learning & clustering
+scikit-learn
+hdbscan
+
+# Visualization
+matplotlib
+seaborn
+
+# Dimensionality reduction
+umap-learn
+
+# Image handling
+opencv-python
+Pillow
+
+# GUI
+PyQt5
+
+# Configuration
+pyyaml
+
+# Model persistence
+joblib
+
+# Jupyter notebooks (optional)
+jupyter
+ipywidgets
+
+# Testing
+pytest

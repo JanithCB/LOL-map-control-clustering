@@ -1,0 +1,3 @@
+# Raw data references / symlinks
+# The original dataset files are in the project root.
+# This directory can hold copies or symlinks for a cleaner pipeline.

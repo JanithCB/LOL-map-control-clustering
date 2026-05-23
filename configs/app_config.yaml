@@ -1,0 +1,25 @@
+# Application Settings
+
+app:
+  title: "LoL Macro Playstyle Explorer"
+  window_width: 1400
+  window_height: 900
+  theme: "dark"
+
+paths:
+  minimap_images: "mid_dataset/images"
+  minimap_labels: "mid_dataset/labels"
+  ranked_data: "games.csv"
+  training_data: "training_data.csv"
+  champion_info: "champion_info.json"
+  champion_info_2: "champion_info_2.json"
+  yolo_weights: "yolov3_LoL_champions.weights"
+  class_names: "mid.names"
+  output_figures: "outputs/figures"
+  output_models: "outputs/models"
+  output_reports: "outputs/reports"
+
+display:
+  samples_per_cluster: 9       # Number of sample images to show per cluster
+  thumbnail_size: [128, 128]   # Thumbnail dimensions in pixels
+  colormap: "Set2"             # Matplotlib colormap for clusters
