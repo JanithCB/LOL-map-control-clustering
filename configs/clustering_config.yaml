@@ -1,33 +1,42 @@
-# Clustering Hyperparameters
+# configs/clustering_config.yaml
 
-kmeans:
-  n_clusters: 6          # Number of clusters to try
-  random_state: 42
-  n_init: 10
-  max_iter: 300
+# K-means is the default MVP method for the first clustering pass.
+# GMM and HDBSCAN are optional extensions for later experimentation.
 
-gmm:
-  n_components: 6
-  covariance_type: "full"  # "full", "tied", "diag", "spherical"
-  random_state: 42
+random_state: 42
 
-hdbscan:
-  min_cluster_size: 50
-  min_samples: 10
-  metric: "euclidean"
+feature_scaling:
+  enabled: true
+  method: standard
 
-# Dimensionality reduction for visualization
-tsne:
+clustering:
+  default_method: "kmeans"
+  candidate_k: [3, 4, 5, 6, 7, 8]
+
+  kmeans:
+    n_init: 20
+    max_iter: 300
+
+  gmm:
+    covariance_type: "full"
+    n_init: 5
+
+  hdbscan:
+    min_cluster_size: 25
+    min_samples: 10
+
+evaluation:
+  use_silhouette: true
+  use_davies_bouldin: true
+  use_calinski_harabasz: true
+
+embedding:
+  method: "pca"
   n_components: 2
-  perplexity: 30
-  random_state: 42
+  umap_neighbors: 15
+  umap_min_dist: 0.1
 
-umap:
-  n_components: 2
-  n_neighbors: 15
-  min_dist: 0.1
-  random_state: 42
-
-# Feature scaling
-preprocessing:
-  scaler: "standard"  # "standard", "minmax", "robust"
+outputs:
+  save_clustered_features: true
+  save_centroids: true
+  save_metrics: true

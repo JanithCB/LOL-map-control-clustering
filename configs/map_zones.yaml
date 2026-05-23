@@ -1,78 +1,78 @@
-configs/map_zones.yaml
+# configs/map_zones.yaml
 metadata:
-map_name: "Summoner's Rift"
-coordinate_space: "normalized"
-version: 1
+  map_name: "Summoner's Rift"
+  coordinate_space: "normalized"
+  version: 1
 
-Heuristic zone boundaries for feature engineering only.
-These are approximate, tweakable rectangles in normalized minimap space.
+# Heuristic zone boundaries for feature engineering only.
+# These are approximate, tweakable rectangles in normalized [0,1] minimap space.
 zones:
-top_lane:
-type: rectangle
-xmin: 0.10
-ymin: 0.08
-xmax: 0.78
-ymax: 0.28
+  top_lane:
+    type: rectangle
+    xmin: 0.10
+    ymin: 0.08
+    xmax: 0.78
+    ymax: 0.28
 
-mid_lane:
-type: rectangle
-xmin: 0.18
-ymin: 0.38
-xmax: 0.82
-ymax: 0.58
+  mid_lane:
+    type: rectangle
+    xmin: 0.18
+    ymin: 0.38
+    xmax: 0.82
+    ymax: 0.58
 
-bot_lane:
-type: rectangle
-xmin: 0.22
-ymin: 0.68
-xmax: 0.90
-ymax: 0.90
+  bot_lane:
+    type: rectangle
+    xmin: 0.22
+    ymin: 0.68
+    xmax: 0.90
+    ymax: 0.90
 
-top_jungle:
-type: rectangle
-xmin: 0.00
-ymin: 0.18
-xmax: 0.55
-ymax: 0.55
+  top_jungle:
+    type: rectangle
+    xmin: 0.00
+    ymin: 0.18
+    xmax: 0.55
+    ymax: 0.55
 
-bot_jungle:
-type: rectangle
-xmin: 0.45
-ymin: 0.45
-xmax: 1.00
-ymax: 0.95
+  bot_jungle:
+    type: rectangle
+    xmin: 0.45
+    ymin: 0.45
+    xmax: 1.00
+    ymax: 0.95
 
-river:
-type: rectangle
-xmin: 0.30
-ymin: 0.28
-xmax: 0.72
-ymax: 0.72
+  river:
+    type: rectangle
+    xmin: 0.30
+    ymin: 0.28
+    xmax: 0.72
+    ymax: 0.72
 
-baron_zone:
-type: rectangle
-xmin: 0.02
-ymin: 0.02
-xmax: 0.24
-ymax: 0.22
+  baron_zone:
+    type: rectangle
+    xmin: 0.02
+    ymin: 0.02
+    xmax: 0.24
+    ymax: 0.22
 
-dragon_zone:
-type: rectangle
-xmin: 0.78
-ymin: 0.78
-xmax: 0.98
-ymax: 0.98
+  dragon_zone:
+    type: rectangle
+    xmin: 0.78
+    ymin: 0.78
+    xmax: 0.98
+    ymax: 0.98
 
-blue_base:
-type: rectangle
-xmin: 0.00
-ymin: 0.72
-xmax: 0.24
-ymax: 1.00
+  blue_base:
+    type: rectangle
+    xmin: 0.00
+    ymin: 0.72
+    xmax: 0.24
+    ymax: 1.00
 
-red_base:
-type: rectangle
-xmin: 0.76
-ymin: 0.00
-xmax: 1.00
-ymax: 0.28
+  red_base:
+    type: rectangle
+    xmin: 0.76
+    ymin: 0.00
+    xmax: 1.00
+    ymax: 0.28
