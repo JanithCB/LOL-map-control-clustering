@@ -1,8 +1,8 @@
-# Desktop GUI entry point
-#
-# Launches the PyQt5 desktop application for exploring
-# discovered minimap clusters and macro game patterns.
-#
-# Usage:
-#   python run_gui.py
-#   python run_gui.py --config configs/app_config.yaml
+# Path: run_gui.py
+# Summary: Root-level launcher for the desktop application.
+# Description: Simple script to launch the PyQT GUI from the project root.
+
+from gui.main_window import main
+
+if __name__ == "__main__":
+    main()

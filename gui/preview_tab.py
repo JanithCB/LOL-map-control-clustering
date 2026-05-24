@@ -1,22 +1,27 @@
+# Path: gui/preview_tab.py
+# Summary: Preview tab for selected cluster thumbnails, summaries, and feature charts.
+# Description: Displays a grid of representative sample thumbnails and a centroid feature bar chart.
 
 from __future__ import annotations
 
 from typing import Optional
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QVBoxLayout,
     QWidget,
+    QScrollArea,
+    QGridLayout,
 )
 
 from gui.data_loader import AppData, ClusterInfo, RepresentativeSample, get_cluster_display_name
+from gui.feature_chart import FeatureBarChart
 
 
 class PreviewTab(QWidget):
-    """Preview tab for selected cluster summaries and representative sample metadata."""
+    """Preview tab for selected cluster summaries, thumbnails, and centroid charts."""
 
     def __init__(
         self,
@@ -32,37 +37,45 @@ class PreviewTab(QWidget):
         self.cluster_name_label = QLabel("Selected cluster: —", self)
         self.description_label = QLabel("Description: —", self)
         self.top_features_label = QLabel("Top features: —", self)
+        
+        self.feature_chart = FeatureBarChart(self)
+
         self.samples_title_label = QLabel("Representative samples", self)
-        self.samples_list = QListWidget(self)
-        self.sample_hint_label = QLabel(
-            "Sample image paths will be shown here when available. "
-            "For now, sample metadata is displayed as readable text.",
-            self,
-        )
+        
+        # Thumbnail grid setup
+        self.thumbnail_scroll = QScrollArea(self)
+        self.thumbnail_scroll.setWidgetResizable(True)
+        self.thumbnail_container = QWidget()
+        self.thumbnail_grid = QGridLayout(self.thumbnail_container)
+        self.thumbnail_grid.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.thumbnail_scroll.setWidget(self.thumbnail_container)
 
         self._build_ui()
 
     def _build_ui(self) -> None:
         """Create the preview tab layout."""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(8)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(8, 8, 8, 8)
+        main_layout.setSpacing(8)
 
         self.title_label.setStyleSheet("font-weight: bold; font-size: 16px;")
         self.description_label.setWordWrap(True)
         self.top_features_label.setWordWrap(True)
-        self.sample_hint_label.setWordWrap(True)
-        self.sample_hint_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        layout.addWidget(self.title_label)
-        layout.addWidget(self.cluster_name_label)
-        layout.addWidget(self.description_label)
-        layout.addWidget(self.top_features_label)
-        layout.addWidget(self.samples_title_label)
-        layout.addWidget(self.samples_list)
-        layout.addWidget(self.sample_hint_label)
+        top_layout = QVBoxLayout()
+        top_layout.addWidget(self.title_label)
+        top_layout.addWidget(self.cluster_name_label)
+        top_layout.addWidget(self.description_label)
+        top_layout.addWidget(self.top_features_label)
+        
+        # Add chart below the text
+        top_layout.addWidget(self.feature_chart)
 
-        self.setLayout(layout)
+        main_layout.addLayout(top_layout)
+        main_layout.addWidget(self.samples_title_label)
+        main_layout.addWidget(self.thumbnail_scroll)
+
+        self.setLayout(main_layout)
 
     def set_cluster(self, cluster_id: int) -> None:
         """Update the preview content for the selected cluster."""
@@ -80,7 +93,7 @@ class PreviewTab(QWidget):
         self.set_cluster(cluster_id)
 
     def _populate_view(self, cluster_info: ClusterInfo) -> None:
-        """Render cluster metadata and representative sample summaries."""
+        """Render cluster metadata, feature chart, and representative sample thumbnails."""
         self.cluster_name_label.setText(
             f"Selected cluster: {get_cluster_display_name(cluster_info)}"
         )
@@ -91,41 +104,82 @@ class PreviewTab(QWidget):
         feature_subset = cluster_info.top_features[:5] if cluster_info.top_features else []
         features_text = ", ".join(feature_subset) if feature_subset else "—"
         self.top_features_label.setText(f"Top features: {features_text}")
+        
+        # Update feature chart
+        self.feature_chart.update_features(feature_subset)
 
-        self.samples_list.clear()
-        if cluster_info.representative_samples:
-            for sample in cluster_info.representative_samples:
-                text = self._format_sample(sample)
-                item = QListWidgetItem(text)
-                self.samples_list.addItem(item)
-        else:
-            self.samples_list.addItem(QListWidgetItem("No representative samples available."))
+        self._rebuild_thumbnail_grid(cluster_info.representative_samples or [])
 
-    def _format_sample(self, sample: RepresentativeSample) -> str:
-        """Create a readable one-line summary for a representative sample."""
+    def _rebuild_thumbnail_grid(self, samples: list[RepresentativeSample]) -> None:
+        """Clear and rebuild the thumbnail grid for the given samples."""
+        # Clear existing items
+        while self.thumbnail_grid.count():
+            child = self.thumbnail_grid.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        if not samples:
+            no_samples_label = QLabel("No representative samples available.")
+            self.thumbnail_grid.addWidget(no_samples_label, 0, 0)
+            return
+
+        columns = 3
+        max_samples = 6
+
+        for i, sample in enumerate(samples[:max_samples]):
+            row = i // columns
+            col = i % columns
+            
+            container = QWidget()
+            layout = QVBoxLayout(container)
+            layout.setContentsMargins(4, 4, 4, 4)
+            layout.setAlignment(Qt.AlignCenter)
+            
+            image_label = QLabel()
+            image_label.setAlignment(Qt.AlignCenter)
+            
+            pixmap = None
+            if sample.image_path:
+                pixmap = QPixmap(sample.image_path)
+            
+            if pixmap and not pixmap.isNull():
+                pixmap = pixmap.scaled(140, 140, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                image_label.setPixmap(pixmap)
+            else:
+                image_label.setText(self._format_sample_metadata(sample))
+                image_label.setWordWrap(True)
+                image_label.setFixedSize(140, 140)
+                image_label.setStyleSheet("border: 1px solid #ccc; background-color: #f9f9f9; padding: 4px;")
+                image_label.setAlignment(Qt.AlignCenter)
+
+            layout.addWidget(image_label)
+            
+            caption = QLabel(f"Sample {i+1}")
+            caption.setAlignment(Qt.AlignCenter)
+            layout.addWidget(caption)
+            
+            self.thumbnail_grid.addWidget(container, row, col)
+
+    def _format_sample_metadata(self, sample: RepresentativeSample) -> str:
+        """Create a readable text fallback when image is missing."""
         pieces = []
-
         if sample.image_path:
-            pieces.append(f"image_path={sample.image_path}")
+            pieces.append(f"Img: {sample.image_path.split('/')[-1]}")
         if sample.match_id:
-            pieces.append(f"match_id={sample.match_id}")
+            pieces.append(f"Match: {sample.match_id}")
         if sample.frame_id:
-            pieces.append(f"frame_id={sample.frame_id}")
-        if sample.timestamp:
-            pieces.append(f"timestamp={sample.timestamp}")
-
+            pieces.append(f"Frame: {sample.frame_id}")
+            
         if pieces:
-            return " | ".join(pieces)
-
+            return "\n".join(pieces)
         if sample.raw_summary:
             return sample.raw_summary
-
-        return "Representative sample"
+        return "No Image"
 
     def _clear_view(self) -> None:
         """Reset preview content when no cluster is available."""
         self.cluster_name_label.setText("Selected cluster: —")
         self.description_label.setText("Description: —")
         self.top_features_label.setText("Top features: —")
-        self.samples_list.clear()
-        self.samples_list.addItem(QListWidgetItem("No representative samples available."))
+        self.feature_chart.update_features([])
+        self._rebuild_thumbnail_grid([])

@@ -1,110 +1,55 @@
 # League of Legends Macro Playstyle Clustering
 
-## Project Goal
-Identify and visualize macro playstyles in League of Legends by clustering minimap-based spatial behavior (lane presence, roaming, grouping, side pressure), and relate those clusters to high-level match statistics from ranked games.
+## Project Overview
+This project identifies and visualizes macro playstyles in *League of Legends* by clustering minimap-based spatial behavior (e.g., lane presence, roaming, grouping, side pressure). It links these localized map-control clusters to high-level match statistics from ranked games to provide actionable, interpretable macro insights.
 
-## Project Structure
+## End-to-End Pipeline
+The project follows a robust data pipeline transforming raw screenshots into insights:
+1. **Minimap Labels / Detections**: YOLO object detection parses champion locations from minimap screenshots into spatial coordinates.
+2. **Spatial Feature Extraction**: Coordinates are mapped to map zones (lanes, jungle, river, pits) to compute presence, grouping, and pressure metrics.
+3. **Unsupervised Clustering**: K-means, GMM, or HDBSCAN cluster these snapshot features into distinct spatial states (e.g., "5-man mid group" or "Deep invade").
+4. **Cluster Interpretation and Labeling**: Centroid profiles and representative samples are analyzed to assign human-readable labels and descriptions.
+5. **Macro Comparison Outputs**: Cluster states are qualitatively and quantitatively linked to high-level ranked game statistics (e.g., objective takes, game pace).
+6. **Desktop App Exploration Layer**: A custom PyQt5 desktop application provides an intuitive interface for exploring clusters, centroids, and notes.
+
+## Key Outputs
+The pipeline generates clean interpretation artifacts in `outputs/reports/`:
+- `clustering/cluster_sizes.csv`: Cluster sizes and proportions.
+- `clustering/cluster_top_features.csv`: The most defining spatial features for each cluster centroid.
+- `clustering/representative_samples.csv`: Real match metadata and image paths for the best examples of each cluster.
+- `clustering/cluster_labels.csv`: Final human-readable cluster labels and descriptions.
+- `comparison/qualitative_comparison_notes.csv`: Notes detailing how each cluster relates to macro objectives.
+
+## Desktop App
+The PyQt5 desktop application provides a polished exploration showcase:
+- **Cluster Panel (Left)**: Navigate through identified clusters with size and top-line metadata.
+- **Preview Tab (Right)**: View the cluster's centroid via a feature bar chart and examine a grid of representative minimap thumbnails.
+- **Macro Tab (Right)**: Read integrated cluster-specific macro notes and global context linking the pattern to match outcomes.
+
+## Repository Structure
 
 ```
 LOL ML project/
-│
-├── data/                          # Raw & processed data
-│   ├── raw/                       # Symlinks or references to raw dataset files
-│   ├── processed/                 # Cleaned/transformed data ready for features
-│   └── interim/                   # Intermediate data (parsed labels, etc.)
-│
-├── mid_dataset/                   # Minimap dataset (Yadola) - YOLO format
-│   ├── images/                    # Minimap screenshot images
-│   └── labels/                    # YOLO label files (.txt)
-│
-├── src/                           # Source code
-│   ├── __init__.py
-│   ├── data/                      # Data loading & preprocessing
-│   │   ├── __init__.py
-│   │   ├── parse_yolo_labels.py   # Step 1: Parse YOLO labels → champion positions
-│   │   ├── load_ranked_data.py    # Load & clean ranked games CSV
-│   │   └── data_utils.py          # Shared data utilities
-│   │
-│   ├── features/                  # Feature engineering
-│   │   ├── __init__.py
-│   │   ├── map_zones.py           # Step 2: Define map zones (lanes, jungle, river, pits)
-│   │   ├── spatial_features.py    # Step 3: Compute spatial features per snapshot
-│   │   └── macro_features.py      # Step 6: Extract macro stats from ranked games
-│   │
-│   ├── clustering/                # Clustering & analysis
-│   │   ├── __init__.py
-│   │   ├── cluster_snapshots.py   # Step 4: K-means / GMM / HDBSCAN on minimap features
-│   │   ├── cluster_analysis.py    # Interpret clusters (centroids, samples)
-│   │   └── playstyle_agg.py       # Step 5: Aggregate to game-level playstyles (optional)
-│   │
-│   ├── visualization/             # Plotting & visual analysis
-│   │   ├── __init__.py
-│   │   ├── plot_clusters.py       # t-SNE / UMAP cluster visualizations
-│   │   ├── plot_minimap.py        # Draw champion positions on minimap
-│   │   ├── plot_radar.py          # Radar/bar charts for cluster centroids
-│   │   └── plot_macro.py          # Macro stats distribution charts
-│   │
-│   └── comparison/                # Linking minimap clusters ↔ ranked stats
-│       ├── __init__.py
-│       └── compare_clusters_macro.py  # Step 7: Qualitative/semi-quantitative comparison
-│
+├── data/                          # Raw & processed ranked data
+├── mid_dataset/                   # Minimap dataset (Yadola) - images & YOLO labels
+├── src/                           # Source code (features, clustering, viz)
 ├── gui/                           # Desktop application (PyQt5)
-│   ├── __init__.py
-│   ├── main_window.py             # Main application window
-│   ├── cluster_panel.py           # Left panel: cluster list & stats
-│   ├── preview_tab.py             # Right tab: minimap samples & centroid charts
-│   ├── macro_tab.py               # Right tab: macro context from ranked data
-│   ├── widgets/                   # Reusable custom widgets
-│   │   ├── __init__.py
-│   │   ├── minimap_viewer.py      # Widget to display minimap images
-│   │   └── chart_widget.py        # Embedded matplotlib chart widget
-│   └── resources/                 # Icons, stylesheets, etc.
-│       └── style.qss              # Qt stylesheet
-│
 ├── notebooks/                     # Jupyter notebooks for exploration
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_feature_engineering.ipynb
-│   ├── 03_clustering.ipynb
-│   └── 04_macro_comparison.ipynb
-│
-├── configs/                       # Configuration files
-│   ├── map_zones.yaml             # Zone definitions (coordinates, polygons)
-│   ├── clustering_config.yaml     # Clustering hyperparameters
-│   └── app_config.yaml            # GUI app settings
-│
+├── configs/                       # Configuration files (zones, app settings)
+├── outputs/                       # Generated outputs (figures, reports)
 ├── tests/                         # Unit tests
-│   ├── __init__.py
-│   ├── test_parse_labels.py
-│   ├── test_spatial_features.py
-│   ├── test_clustering.py
-│   └── test_macro_features.py
-│
-├── outputs/                       # Generated outputs
-│   ├── figures/                   # Saved plots and visualizations
-│   ├── models/                    # Saved clustering models (pickle, joblib)
-│   └── reports/                   # Summary reports, tables
-│
-├── requirements.txt               # Python dependencies
-├── setup.py                       # Package setup (optional)
-├── run_pipeline.py                # Main script: runs full pipeline end-to-end
-├── run_gui.py                     # Entry point to launch the desktop app
-└── README.md                      # This file
+└── run_*.py                       # Entry points (pipeline, gui)
 ```
 
-## Pipeline Steps
-1. **Parse YOLO labels** → champion (x, y) positions per snapshot
-2. **Define map zones** → lanes, jungle, river, objective pits
-3. **Compute spatial features** → lane presence, roaming, grouping, side pressure
-4. **Cluster snapshots** → k-means / GMM / HDBSCAN on spatial features
-5. **(Optional) Aggregate to playstyles** → game-level cluster distributions
-6. **Extract macro stats** → objectives, pace, outcome from ranked data
-7. **Compare clusters ↔ macro** → qualitative/semi-quantitative linking
+## How to Run
 
-## Datasets
-- **Minimap Dataset (Yadola)**: `mid_dataset/` — images + YOLO labels
-- **Ranked Games (EUW)**: `games.csv` — ~50k matches
-- **Training Data (NA, optional)**: `training_data.csv` — 10k matches, 700+ features
-- **Champion Info**: `champion_info.json`, `champion_info_2.json`
-- **Summoner Spells**: `summoner_spell_info.json`
-- **YOLO Weights**: `yolov3_LoL_champions.weights`
-- **Class Names**: `mid.names`
+1. **Run the Full Pipeline**: Conceptually (if enabled), `python run_pipeline.py` executes data loading, feature extraction, and clustering.
+2. **Cluster Interpretation**: `python -m src.clustering.interpret_clusters --export-py` generates the readable labels and CSV outputs.
+3. **Launch the Desktop App**: `python -m gui.main_window` or `python run_gui.py` to explore the generated insights visually.
+
+## Project Highlights
+- **Computer Vision Pipeline**: Custom YOLO parsing on a noisy domain-specific dataset.
+- **Domain-Specific Feature Engineering**: Transforming raw (x,y) positions into strategic League of Legends concepts.
+- **Unsupervised Learning**: Discovering implicit structures in player behavior without explicit labeling.
+- **Qualitative Interpretation Layer**: Bridging the gap between raw math (centroids) and human insights.
+- **PyQt Desktop Showcase**: A robust, portfolio-ready interactive tool to demonstrate the clustering results.

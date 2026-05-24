@@ -166,6 +166,6 @@ def test_load_app_data_handles_global_notes_without_cluster_ids(tmp_path: Path) 
     app_data = load_app_data(tmp_path)
 
     assert app_data.cluster_infos[0].notes == ""
-    assert "overview: overview" in app_data.global_notes
+    assert "section: overview" in app_data.global_notes
     assert "Higher-ranked games show more coordinated macro setups." in app_data.global_notes
     assert "Objective-focused states appear earlier in stronger games." in app_data.global_notes

@@ -1,3 +1,6 @@
+# Path: gui/macro_tab.py
+# Summary: Qualitative macro analysis and comparison context.
+# Description: Shows cluster-specific notes, global notes, and a structured summary area.
 
 from __future__ import annotations
 
@@ -24,6 +27,11 @@ class MacroTab(QWidget):
 
         self.title_label = QLabel("Macro context", self)
         self.cluster_label = QLabel("Selected cluster: —", self)
+        
+        self.summary_label = QLabel("This panel compares macro context and qualitative notes for the selected cluster.", self)
+        self.summary_label.setWordWrap(True)
+        self.summary_label.setStyleSheet("color: #666; font-style: italic; margin-bottom: 8px;")
+
         self.notes_heading = QLabel("Notes", self)
         self.notes_text = QTextEdit(self)
 
@@ -38,12 +46,14 @@ class MacroTab(QWidget):
         self.title_label.setStyleSheet("font-weight: bold; font-size: 16px;")
         self.cluster_label.setWordWrap(True)
         self.notes_heading.setWordWrap(True)
+        self.notes_heading.setStyleSheet("font-weight: bold; margin-top: 8px;")
 
         self.notes_text.setReadOnly(True)
         self.notes_text.setPlaceholderText("No macro notes available.")
 
         layout.addWidget(self.title_label)
         layout.addWidget(self.cluster_label)
+        layout.addWidget(self.summary_label)
         layout.addWidget(self.notes_heading)
         layout.addWidget(self.notes_text)
 

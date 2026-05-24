@@ -171,3 +171,21 @@ class MainWindow(QMainWindow):
             if widget is None:
                 break
             widget.setParent(None)
+
+
+def main() -> None:
+    """Launch the main desktop application."""
+    import sys
+    from PyQt5.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+    app.setApplicationName("LoL Map Control Cluster Explorer")
+
+    window = MainWindow()
+    window.show()
+
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

@@ -117,6 +117,8 @@ def representative_samples(
 
             if "image_id" in sample.index:
                 row["image_id"] = sample["image_id"]
+                # Derive image_path from image_id so GUI can load thumbnails
+                row["image_path"] = f"mid_dataset/images/{sample['image_id']}"
             if "label_file" in sample.index:
                 row["label_file"] = sample["label_file"]
 
