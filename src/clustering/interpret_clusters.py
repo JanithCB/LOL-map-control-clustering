@@ -69,7 +69,7 @@ def normalize_cluster_column(df: pd.DataFrame) -> pd.DataFrame:
     df = normalize_column_names(df).copy()
     cluster_col = find_first_matching_column(
         df,
-        candidates=("cluster_id", "cluster", "cluster_idx"),
+        candidates=("cluster_id", "cluster", "cluster_idx", "cluster_label"),
         label="cluster identifier",
     )
     if cluster_col != "cluster_id":
@@ -80,7 +80,7 @@ def normalize_cluster_column(df: pd.DataFrame) -> pd.DataFrame:
 def detect_size_column(df: pd.DataFrame) -> str:
     """Detect the column representing cluster size/count."""
     df = normalize_column_names(df)
-    direct_matches = [col for col in ("size", "count", "n") if col in df.columns]
+    direct_matches = [col for col in ("size", "count", "n", "n_samples") if col in df.columns]
     if len(direct_matches) == 1:
         return direct_matches[0]
     if len(direct_matches) > 1:
@@ -116,14 +116,14 @@ def parse_cluster_sizes(df: pd.DataFrame) -> pd.DataFrame:
 
 def _detect_feature_value_column(df: pd.DataFrame) -> str:
     """Find the metric column in long-format feature tables."""
-    candidates = [col for col in ("importance", "weight", "score", "value") if col in df.columns]
+    candidates = [col for col in ("importance", "weight", "score", "value", "centroid_value") if col in df.columns]
     if len(candidates) == 1:
         return candidates[0]
     if len(candidates) > 1:
         raise ValueError(f"Ambiguous feature metric columns found: {candidates}")
     raise ValueError(
         "Could not detect feature metric column. Expected one of "
-        "['importance', 'weight', 'score', 'value']."
+        "['importance', 'weight', 'score', 'value', 'centroid_value']."
     )
 
 
@@ -223,7 +223,11 @@ def extract_representative_samples(
 
 def extract_macro_notes(df: pd.DataFrame) -> Dict[int, str]:
     """Collapse qualitative note rows into one readable string per cluster."""
-    df = normalize_cluster_column(df).copy()
+    try:
+        df = normalize_cluster_column(df).copy()
+    except ValueError:
+        return {}
+
     df["cluster_id"] = pd.to_numeric(df["cluster_id"], errors="raise").astype(int)
 
     text_cols = [col for col in df.columns if col != "cluster_id"]
