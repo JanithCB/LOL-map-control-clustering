@@ -1,4 +1,4 @@
-
+# Path: gui/data_loader.py
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -37,12 +37,15 @@ class ClusterInfo:
     top_features: List[str] = field(default_factory=list)
     representative_samples: List[RepresentativeSample] = field(default_factory=list)
     notes: str = ""
+    summary_bullets: List[str] = field(default_factory=list)
 
 
 @dataclass
 class AppData:
     cluster_infos: Dict[int, ClusterInfo] = field(default_factory=dict)
     global_notes: str = ""
+    global_summary_bullets: List[str] = field(default_factory=list)
+    quantitative_comparison: Optional[pd.DataFrame] = None
 
 
 def _read_csv(path: Path) -> pd.DataFrame:
@@ -275,7 +278,7 @@ def _load_representative_samples(base_dir: Path, top_n: int = 5) -> Dict[int, Li
     return result
 
 
-def _load_qualitative_notes(base_dir: Path) -> tuple[Dict[int, str], str]:
+def _load_qualitative_notes(base_dir: Path) -> tuple[Dict[int, str], str, Dict[int, List[str]], List[str]]:
     path = base_dir / QUALITATIVE_NOTES_PATH
     df = _read_csv(path)
     df = _normalize_columns(df)
@@ -283,35 +286,54 @@ def _load_qualitative_notes(base_dir: Path) -> tuple[Dict[int, str], str]:
     cluster_col = _find_column(df, ["cluster_id", "cluster", "cluster_idx", "cluster_label"])
     if cluster_col is None:
         text_chunks: List[str] = []
+        bullets: List[str] = []
         for _, row in df.iterrows():
             row_parts = []
             for col in df.columns:
                 text = _safe_text(row[col])
                 if text:
                     row_parts.append(f"{col}: {text}")
+                    bullets.append(f"• {text}")
             if row_parts:
                 text_chunks.append(" | ".join(row_parts))
-        return {}, "\n".join(text_chunks)
+        return {}, "\n".join(text_chunks), {}, bullets
 
     df = _normalize_cluster_column(df)
     df = _coerce_cluster_ids(df)
 
     note_cols = [col for col in df.columns if col != "cluster_id"]
     notes_by_cluster: Dict[int, str] = {}
+    bullets_by_cluster: Dict[int, List[str]] = {}
 
     for cluster_id, group in df.groupby("cluster_id"):
         row_texts: List[str] = []
+        cluster_bullets: List[str] = []
         for _, row in group.iterrows():
             parts = []
             for col in note_cols:
                 text = _safe_text(row[col])
                 if text:
                     parts.append(text)
+                    cluster_bullets.append(f"• {text}")
             if parts:
                 row_texts.append(" | ".join(parts))
         notes_by_cluster[int(cluster_id)] = " || ".join(row_texts)
+        bullets_by_cluster[int(cluster_id)] = cluster_bullets
 
-    return notes_by_cluster, ""
+    return notes_by_cluster, "", bullets_by_cluster, []
+
+
+def _load_quantitative_comparison(base_dir: Path) -> Optional[pd.DataFrame]:
+    comp_dir = base_dir / COMPARISON_DIR
+    if not comp_dir.exists():
+        return None
+    for csv_file in comp_dir.glob("*.csv"):
+        if csv_file.name != QUALITATIVE_NOTES_PATH.name:
+            try:
+                return pd.read_csv(csv_file)
+            except Exception:
+                pass
+    return None
 
 
 def get_cluster_display_name(cluster_info: ClusterInfo) -> str:
@@ -328,7 +350,7 @@ def load_cluster_infos(base_dir: str | Path = ".") -> Dict[int, ClusterInfo]:
     labels = _load_cluster_labels(base)
     top_features = _load_top_features(base)
     representative_samples = _load_representative_samples(base)
-    notes_by_cluster, _ = _load_qualitative_notes(base)
+    notes_by_cluster, _, bullets_by_cluster, _ = _load_qualitative_notes(base)
 
     cluster_ids = sorted(
         set(sizes.keys())
@@ -356,6 +378,7 @@ def load_cluster_infos(base_dir: str | Path = ".") -> Dict[int, ClusterInfo]:
             top_features=top_features.get(cluster_id, []),
             representative_samples=representative_samples.get(cluster_id, []),
             notes=notes_by_cluster.get(cluster_id, ""),
+            summary_bullets=bullets_by_cluster.get(cluster_id, [])
         )
 
     return cluster_infos
@@ -364,8 +387,14 @@ def load_cluster_infos(base_dir: str | Path = ".") -> Dict[int, ClusterInfo]:
 def load_app_data(base_dir: str | Path = ".") -> AppData:
     base = Path(base_dir)
     cluster_infos = load_cluster_infos(base)
-    _, global_notes = _load_qualitative_notes(base)
-    return AppData(cluster_infos=cluster_infos, global_notes=global_notes)
+    _, global_notes, _, global_bullets = _load_qualitative_notes(base)
+    quant_comp = _load_quantitative_comparison(base)
+    return AppData(
+        cluster_infos=cluster_infos, 
+        global_notes=global_notes,
+        global_summary_bullets=global_bullets,
+        quantitative_comparison=quant_comp
+    )
 
 
 def get_cluster_info(cluster_id: int, base_dir: str | Path = ".") -> Optional[ClusterInfo]:

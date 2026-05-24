@@ -26,6 +26,12 @@ The PyQt5 desktop application provides a polished exploration showcase:
 - **Preview Tab (Right)**: View the cluster's centroid via a feature bar chart and examine a grid of representative minimap thumbnails.
 - **Macro Tab (Right)**: Read integrated cluster-specific macro notes and global context linking the pattern to match outcomes.
 
+## Screenshots / GUI Preview
+*(Screenshots will be added here once generated)*
+- **Cluster Panel**: `![Cluster Panel Placeholder]()`
+- **Preview Tab (with Thumbnails and Chart)**: `![Preview Tab Placeholder]()`
+- **Macro Tab (Notes and Comparison Table)**: `![Macro Tab Placeholder]()`
+
 ## Repository Structure
 
 ```

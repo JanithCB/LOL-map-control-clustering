@@ -14,10 +14,56 @@ from PyQt5.QtWidgets import (
     QWidget,
     QScrollArea,
     QGridLayout,
+    QDialog,
 )
 
 from gui.data_loader import AppData, ClusterInfo, RepresentativeSample, get_cluster_display_name
 from gui.feature_chart import FeatureBarChart
+
+
+class ClickableLabel(QLabel):
+    def __init__(self, sample: RepresentativeSample, parent=None):
+        super().__init__(parent)
+        self.sample = sample
+        self.setCursor(Qt.PointingHandCursor)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._show_enlarged_dialog()
+
+    def _show_enlarged_dialog(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Representative Sample")
+        dialog.setMinimumSize(400, 400)
+        layout = QVBoxLayout(dialog)
+        
+        if self.sample.image_path:
+            img_label = QLabel()
+            pixmap = QPixmap(self.sample.image_path)
+            if not pixmap.isNull():
+                img_label.setPixmap(pixmap.scaled(800, 800, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                img_label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(img_label)
+            
+        meta_label = QLabel()
+        meta_text = []
+        if self.sample.image_path:
+            meta_text.append(f"Image Path: {self.sample.image_path}")
+        if self.sample.match_id:
+            meta_text.append(f"Match ID: {self.sample.match_id}")
+        if self.sample.frame_id:
+            meta_text.append(f"Frame ID: {self.sample.frame_id}")
+        if self.sample.timestamp:
+            meta_text.append(f"Timestamp: {self.sample.timestamp}")
+            
+        if meta_text:
+            meta_label.setText("\n".join(meta_text))
+        else:
+            meta_label.setText(self.sample.raw_summary or "No metadata available.")
+            
+        meta_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(meta_label)
+        dialog.exec_()
 
 
 class PreviewTab(QWidget):
@@ -135,8 +181,9 @@ class PreviewTab(QWidget):
             layout.setContentsMargins(4, 4, 4, 4)
             layout.setAlignment(Qt.AlignCenter)
             
-            image_label = QLabel()
+            image_label = ClickableLabel(sample, parent=container)
             image_label.setAlignment(Qt.AlignCenter)
+            image_label.setToolTip("Click to enlarge")
             
             pixmap = None
             if sample.image_path:
