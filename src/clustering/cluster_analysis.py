@@ -116,15 +116,27 @@ def representative_samples(
             }
 
             if "image_id" in sample.index:
-                row["image_id"] = sample["image_id"]
-                # Derive image_path from image_id so GUI can load thumbnails
-                row["image_path"] = f"mid_dataset/images/{sample['image_id']}"
+                image_id = str(sample["image_id"])
+                row["image_id"] = image_id
+                
+                img_dir = Path("..") / "mid_dataset" / "images"
+                resolved_path = ""
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    test_path = img_dir / f"{image_id}{ext}"
+                    if test_path.exists():
+                        resolved_path = f"../mid_dataset/images/{image_id}{ext}"
+                        break
+                        
+                if not resolved_path:
+                    LOGGER.warning("Could not resolve image file for image_id %s", image_id)
+                row["image_path"] = resolved_path
+                
             if "label_file" in sample.index:
                 row["label_file"] = sample["label_file"]
 
             results.append(row)
 
-    columns = ["cluster_label", "image_id", "rank_in_cluster", "distance_to_centroid"]
+    columns = ["cluster_label", "image_id", "image_path", "rank_in_cluster", "distance_to_centroid"]
     if "label_file" in clustered_df.columns:
         columns.append("label_file")
 
