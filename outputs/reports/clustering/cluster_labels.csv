@@ -1,6 +1,6 @@
 cluster_id,label,short_description,size,pct,review_status
-0,Cluster pattern review,"This cluster appears distinct but should be manually named from its feature profile, representative samples, and qualitative notes.",5529.0,76.79,needs_review
-1,Cluster pattern review,"This cluster appears distinct but should be manually named from its feature profile, representative samples, and qualitative notes.",666.0,9.25,needs_review
-2,Cluster pattern review,"This cluster appears distinct but should be manually named from its feature profile, representative samples, and qualitative notes.",399.0,5.54,needs_review
-3,Cluster pattern review,"This cluster appears distinct but should be manually named from its feature profile, representative samples, and qualitative notes.",357.0,4.96,needs_review
-4,Cluster pattern review,"This cluster appears distinct but should be manually named from its feature profile, representative samples, and qualitative notes.",249.0,3.46,needs_review
+0,River & Mid Roaming,"Players are positioned around the mid lane and river, focusing on roaming and contesting neutral objectives.",5529.0,76.79,needs_review
+1,Blue Base Grouping,"Players are grouped inside the blue team's base, likely defending a siege or respawning.",666.0,9.25,needs_review
+2,Red Bot Lane Siege,"Players are concentrated on the red side of the bot lane, pushing deep towers or setting up map pressure.",399.0,5.54,needs_review
+3,Bot Lane Skirmishing,"Players are focused in the bot lane and lower map areas, typical for laning phase presence or early skirmishes.",357.0,4.96,needs_review
+4,Red River Control,"Players are occupying the river towards the red side, likely establishing vision control or setting up for neutral objectives.",249.0,3.46,needs_review

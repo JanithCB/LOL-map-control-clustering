@@ -394,13 +394,20 @@ def build_interpretation_sheet(
     return pd.DataFrame(rows).sort_values("cluster_id").reset_index(drop=True)
 
 
-def prefer_manual_or_draft(row: pd.Series, manual_col: str, draft_col: str) -> str:
-    """Prefer manual value if present, otherwise draft value."""
+def prefer_manual_or_draft(row: pd.Series, manual_col: str, draft_col: str, fallback_prefix: str = "Cluster") -> str:
+    """Prefer manual value if present, otherwise draft value. Uses safe fallback if blank."""
     manual_value = row.get(manual_col, "")
     if pd.notna(manual_value) and str(manual_value).strip():
         return str(manual_value).strip()
+        
     draft_value = row.get(draft_col, "")
-    return str(draft_value).strip() if pd.notna(draft_value) else ""
+    if pd.notna(draft_value) and str(draft_value).strip():
+        return str(draft_value).strip()
+        
+    if manual_col == "manual_label":
+        cluster_id = row.get("cluster_id", "?")
+        return f"{fallback_prefix} {cluster_id}"
+    return ""
 
 
 def export_labels_csv(interpretation_df: pd.DataFrame, path: Path) -> pd.DataFrame:
@@ -419,6 +426,7 @@ def export_labels_csv(interpretation_df: pd.DataFrame, path: Path) -> pd.DataFra
     out = final_df[
         ["cluster_id", "label", "short_description", "size", "pct", "review_status"]
     ].copy()
+    out = out.sort_values("cluster_id").reset_index(drop=True)
     out.to_csv(path, index=False)
     return out
 
@@ -514,6 +522,25 @@ def run_interpretation(
         sample_map=representative_samples_map,
         notes_map=macro_notes_map,
     )
+
+    if INTERPRETATION_SHEET_PATH.exists():
+        try:
+            existing_df = pd.read_csv(INTERPRETATION_SHEET_PATH)
+            if "cluster_id" in existing_df.columns:
+                existing_dict = existing_df.set_index("cluster_id").to_dict("index")
+                for col in ["manual_label", "manual_description", "review_status"]:
+                    if col in existing_df.columns:
+                        def _fill_col(row):
+                            cid = row["cluster_id"]
+                            if cid in existing_dict:
+                                val = existing_dict[cid].get(col)
+                                if pd.notna(val) and str(val).strip():
+                                    return str(val)
+                            return row[col]
+                        interpretation_df[col] = interpretation_df.apply(_fill_col, axis=1)
+        except Exception as e:
+            print(f"Warning: Could not merge existing interpretation sheet: {e}")
+
     interpretation_df.to_csv(INTERPRETATION_SHEET_PATH, index=False)
 
     labels_df = export_labels_csv(interpretation_df, LABELS_CSV_PATH)

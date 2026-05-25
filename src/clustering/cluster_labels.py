@@ -6,70 +6,48 @@ import csv
 from pathlib import Path
 from typing import Dict, Tuple
 
-
 DEFAULT_LABELS_CSV = Path("outputs/reports/clustering/cluster_labels.csv")
 
-CLUSTER_LABELS: Dict[int, str] = {}
-CLUSTER_DESCRIPTIONS: Dict[int, str] = {}
+CLUSTER_LABELS = {
+    0: "River & Mid Roaming",
+    1: "Blue Base Grouping",
+    2: "Red Bot Lane Siege",
+    3: "Bot Lane Skirmishing",
+    4: "Red River Control",
+}
+
+CLUSTER_DESCRIPTIONS = {
+    0: "Players are positioned around the mid lane and river, focusing on roaming and contesting neutral objectives.",
+    1: "Players are grouped inside the blue team's base, likely defending a siege or respawning.",
+    2: "Players are concentrated on the red side of the bot lane, pushing deep towers or setting up map pressure.",
+    3: "Players are focused in the bot lane and lower map areas, typical for laning phase presence or early skirmishes.",
+    4: "Players are occupying the river towards the red side, likely establishing vision control or setting up for neutral objectives.",
+}
 
 
-def load_cluster_labels(
-    csv_path: str | Path = DEFAULT_LABELS_CSV,
-) -> Tuple[Dict[int, str], Dict[int, str]]:
-    """
-    Load cluster labels and descriptions from a CSV file.
-
-    Expected CSV columns:
-    - cluster_id
-    - label
-    - short_description
-
-    If the CSV does not exist, returns the module defaults.
-    """
-    path = Path(csv_path)
-
-    if not path.exists():
+def load_cluster_labels(csv_path: str | Path = DEFAULT_LABELS_CSV) -> Tuple[Dict[int, str], Dict[int, str]]:
+    csv_path = Path(csv_path)
+    if not csv_path.exists():
         return CLUSTER_LABELS, CLUSTER_DESCRIPTIONS
 
     labels: Dict[int, str] = {}
     descriptions: Dict[int, str] = {}
 
-    with path.open("r", encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file)
-
-        required_columns = {"cluster_id", "label", "short_description"}
-        missing_columns = required_columns.difference(reader.fieldnames or [])
-        if missing_columns:
-            missing = ", ".join(sorted(missing_columns))
-            raise ValueError(
-                f"Missing required columns in {path}: {missing}"
-            )
-
+    with csv_path.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
         for row in reader:
-            cluster_id_raw = row.get("cluster_id", "").strip()
-            if not cluster_id_raw:
-                continue
-
-            cluster_id = int(cluster_id_raw)
-            labels[cluster_id] = row.get("label", "").strip()
-            descriptions[cluster_id] = row.get("short_description", "").strip()
+            cluster_id = int(row["cluster_id"])
+            labels[cluster_id] = row["label"]
+            descriptions[cluster_id] = row["short_description"]
 
     return labels, descriptions
 
 
-def get_cluster_label(
-    cluster_id: int,
-    csv_path: str | Path = DEFAULT_LABELS_CSV,
-) -> str:
-    """Return the human-readable label for a cluster, or a fallback name."""
+def get_cluster_label(cluster_id: int, csv_path: str | Path = DEFAULT_LABELS_CSV) -> str:
     labels, _ = load_cluster_labels(csv_path)
     return labels.get(cluster_id, f"Cluster {cluster_id}")
 
 
-def get_cluster_description(
-    cluster_id: int,
-    csv_path: str | Path = DEFAULT_LABELS_CSV,
-) -> str:
-    """Return the human-readable description for a cluster, or an empty string."""
+def get_cluster_description(cluster_id: int, csv_path: str | Path = DEFAULT_LABELS_CSV) -> str:
     _, descriptions = load_cluster_labels(csv_path)
     return descriptions.get(cluster_id, "")
