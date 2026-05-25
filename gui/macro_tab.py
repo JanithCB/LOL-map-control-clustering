@@ -85,7 +85,20 @@ class MacroTab(QWidget):
             
         self.comparison_table.setRowCount(len(df))
         self.comparison_table.setColumnCount(len(df.columns))
-        self.comparison_table.setHorizontalHeaderLabels([str(c) for c in df.columns])
+        
+        # Rename columns to short readable titles
+        col_mapping = {
+            "cluster_label": "Cluster",
+            "cluster_id": "Cluster",
+            "metric": "Category",
+            "feature": "Category",
+            "value": "Value",
+            "n_samples": "Count",
+            "proportion": "Proportion",
+            "pct": "Proportion"
+        }
+        headers = [col_mapping.get(str(c).lower(), str(c).replace("_", " ").title()) for c in df.columns]
+        self.comparison_table.setHorizontalHeaderLabels(headers)
         
         for i, row in df.iterrows():
             for j, col in enumerate(df.columns):
@@ -106,8 +119,15 @@ class MacroTab(QWidget):
     def _populate_view(self, cluster_info: ClusterInfo) -> None:
         """Show cluster-specific notes or fall back to global comparison notes."""
         self.cluster_label.setText(
-            f"Selected cluster: {get_cluster_display_name(cluster_info)}"
+            f"<b>Selected cluster:</b> {get_cluster_display_name(cluster_info)}"
         )
+
+        summary_text = (
+            f"<b>Playstyle Summary:</b> {cluster_info.description or 'A distinct grouping pattern focused on specific map objectives.'} "
+            "This macro state demonstrates the team's localized control and pacing during this phase of the game."
+        )
+        self.summary_label.setText(summary_text)
+        self.summary_label.setStyleSheet("color: #E0E0E0; font-size: 13px; margin-bottom: 12px; line-height: 1.4;")
 
         cluster_notes = cluster_info.notes.strip() if cluster_info.notes else ""
         global_notes = self.app_data.global_notes.strip() if self.app_data.global_notes else ""
@@ -120,13 +140,17 @@ class MacroTab(QWidget):
             self.bullets_label.hide()
 
         if cluster_notes:
-            self.notes_heading.setText("Cluster-specific notes")
-            self.notes_text.setPlainText(cluster_notes)
+            self.notes_heading.setText("<b>Cluster-specific Playstyle Notes</b>")
+            self.notes_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 12px; margin-bottom: 4px; border-bottom: 1px solid #1e2328;")
+            formatted_notes = cluster_notes.replace(" || ", "<br><br><b>Sector Notes:</b><br>").replace(" | ", "<br>• ")
+            self.notes_text.setHtml(f"<div style='line-height: 1.5; color: #F0E6D2; font-size: 13px;'>{formatted_notes}</div>")
             return
 
         if global_notes:
-            self.notes_heading.setText("Global comparison notes")
-            self.notes_text.setPlainText(global_notes)
+            self.notes_heading.setText("<b>Global Comparison Notes</b>")
+            self.notes_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 12px; margin-bottom: 4px; border-bottom: 1px solid #1e2328;")
+            formatted_notes = global_notes.replace("\n", "<br>")
+            self.notes_text.setHtml(f"<div style='line-height: 1.5; color: #F0E6D2; font-size: 13px;'>{formatted_notes}</div>")
             return
 
         self.notes_heading.setText("Notes")
