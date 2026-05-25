@@ -20,6 +20,7 @@ from gui.cluster_panel import ClusterPanel
 from gui.data_loader import AppData, load_app_data
 from gui.macro_tab import MacroTab
 from gui.preview_tab import PreviewTab
+from gui.projection_tab import ProjectionTab
 from PyQt5.QtWidgets import QShortcut
 from PyQt5.QtGui import QKeySequence
 
@@ -40,6 +41,7 @@ class MainWindow(QMainWindow):
         self.cluster_panel: Optional[ClusterPanel] = None
         self.preview_tab: Optional[PreviewTab] = None
         self.macro_tab: Optional[MacroTab] = None
+        self.projection_tab: Optional[ProjectionTab] = None
         self.tabs: Optional[QTabWidget] = None
 
         self._build_base_ui()
@@ -112,9 +114,11 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget(self.splitter)
         self.preview_tab = PreviewTab(app_data=self.app_data, parent=self.tabs)
         self.macro_tab = MacroTab(app_data=self.app_data, parent=self.tabs)
+        self.projection_tab = ProjectionTab(app_data=self.app_data, parent=self.tabs)
 
         self.tabs.addTab(self.preview_tab, "Preview")
         self.tabs.addTab(self.macro_tab, "Macro")
+        self.tabs.addTab(self.projection_tab, "Projection")
 
         self.splitter.addWidget(self.cluster_panel)
         self.splitter.addWidget(self.tabs)

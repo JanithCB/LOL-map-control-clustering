@@ -136,6 +136,68 @@ def plot_cluster_centroid_heatmap(
     plt.close(fig)
 
 
+def plot_2d_projection(
+    proj_df: pd.DataFrame,
+    output_path: str | Path,
+) -> None:
+    """
+    Plot 2D cluster scatter plot from the exported projection CSV.
+    """
+    if proj_df.empty:
+        raise ValueError("proj_df is empty.")
+    if "cluster_label" not in proj_df.columns:
+        raise KeyError("proj_df must contain 'cluster_label'.")
+    if "proj_x" not in proj_df.columns or "proj_y" not in proj_df.columns:
+        raise KeyError("proj_df must contain 'proj_x' and 'proj_y'.")
+        
+    method_name = proj_df["method"].iloc[0] if "method" in proj_df.columns else "2D Projection"
+        
+    labels = proj_df["cluster_label"].to_numpy()
+    unique_labels = sorted(pd.unique(labels))
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    cmap = plt.get_cmap("tab10", len(unique_labels))
+
+    for idx, cluster_label in enumerate(unique_labels):
+        mask = labels == cluster_label
+        ax.scatter(
+            proj_df.loc[mask, "proj_x"],
+            proj_df.loc[mask, "proj_y"],
+            s=18,
+            alpha=0.75,
+            label=f"Cluster {cluster_label}",
+            color=cmap(idx),
+            edgecolors="none",
+        )
+        
+        # Annotate centroid lightly
+        centroid_x = proj_df.loc[mask, "proj_x"].mean()
+        centroid_y = proj_df.loc[mask, "proj_y"].mean()
+        ax.text(
+            centroid_x, centroid_y, str(cluster_label),
+            fontsize=12, fontweight='bold',
+            ha='center', va='center',
+            bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec="gray", alpha=0.7)
+        )
+
+    ax.set_title(f"{method_name} Projection of Map Control Clusters")
+    ax.set_xlabel("Projection X")
+    ax.set_ylabel("Projection Y")
+    
+    ax.legend(loc="best", fontsize=8)
+    ax.grid(alpha=0.25)
+    
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+
+
+
 def save_default_cluster_plots(
     clustered_df: pd.DataFrame,
     centroids_df: pd.DataFrame,
