@@ -43,8 +43,9 @@ class ClickableLabel(QLabel):
             if img_path.exists():
                 img_label = QLabel()
                 pixmap = QPixmap(str(img_path))
-                if not pixmap.isNull():
-                    img_label.setPixmap(pixmap.scaled(800, 800, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                if pixmap and not pixmap.isNull():
+                    scaled = pixmap.scaled(600, 450, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    img_label.setPixmap(scaled)
                     img_label.setAlignment(Qt.AlignCenter)
                     layout.addWidget(img_label)
                     has_image = True
@@ -59,7 +60,12 @@ class ClickableLabel(QLabel):
         if self.sample.image_path:
             meta_text.append(f"Image Path: {self.sample.image_path}")
         if self.sample.match_id:
-            meta_text.append(f"Match ID: {self.sample.match_id}")
+            if self.sample.link_method:
+                meta_text.append(f"Match ID: {self.sample.match_id} (linked via {self.sample.link_method}, conf: {self.sample.confidence})")
+                if self.sample.link_notes:
+                    meta_text.append(f"Link Notes: {self.sample.link_notes}")
+            else:
+                meta_text.append(f"Match ID: {self.sample.match_id}")
         if self.sample.frame_id:
             meta_text.append(f"Frame ID: {self.sample.frame_id}")
         if self.sample.timestamp:
@@ -117,10 +123,12 @@ class PreviewTab(QWidget):
         self.description_label.setWordWrap(True)
         self.top_features_label.setWordWrap(True)
 
-        from PyQt5.QtWidgets import QHBoxLayout
+        from PyQt5.QtWidgets import QHBoxLayout, QSplitter
         from gui.projection_canvas import ProjectionCanvas
 
-        top_h_layout = QHBoxLayout()
+        top_widget = QWidget()
+        top_h_layout = QHBoxLayout(top_widget)
+        top_h_layout.setContentsMargins(0, 0, 0, 0)
         
         left_layout = QVBoxLayout()
         left_layout.addWidget(self.title_label)
@@ -135,10 +143,20 @@ class PreviewTab(QWidget):
         top_h_layout.addLayout(left_layout, stretch=1)
         top_h_layout.addWidget(self.projection_canvas, stretch=1)
 
-        main_layout.addLayout(top_h_layout)
-        main_layout.addWidget(self.samples_title_label)
-        main_layout.addWidget(self.thumbnail_scroll)
+        bottom_widget = QWidget()
+        bottom_layout = QVBoxLayout(bottom_widget)
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+        bottom_layout.addWidget(self.samples_title_label)
+        bottom_layout.addWidget(self.thumbnail_scroll)
 
+        # Use QSplitter to allow resizing between top details and bottom thumbnails
+        splitter = QSplitter(Qt.Vertical)
+        splitter.addWidget(top_widget)
+        splitter.addWidget(bottom_widget)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+
+        main_layout.addWidget(splitter)
         self.setLayout(main_layout)
 
     def set_cluster(self, cluster_id: int) -> None:
@@ -217,18 +235,20 @@ class PreviewTab(QWidget):
                     print(f"WARNING: Image not found at path: {img_path.resolve()}")
             
             if pixmap and not pixmap.isNull():
-                pixmap = pixmap.scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                pixmap = pixmap.scaled(140, 140, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 image_label.setPixmap(pixmap)
             else:
                 image_label.setText("<i>Thumbnail unavailable;<br>showing sample details</i>")
-                image_label.setFixedSize(160, 100)
+                image_label.setFixedSize(140, 80)
                 image_label.setStyleSheet("border: 1px dashed #555; background-color: #1e2328; color: #A09B8C; padding: 4px; border-radius: 4px;")
                 image_label.setAlignment(Qt.AlignCenter)
 
             layout.addWidget(image_label)
             
             meta_text = f"<b>Sample {i+1}</b><br><span style='color: #A09B8C; font-size: 11px;'>"
-            if sample.match_id: meta_text += f"Match: {sample.match_id}<br>"
+            if sample.match_id:
+                link_badge = f" <span style='color: #81C784;'>[{sample.link_method}]</span>" if sample.link_method else ""
+                meta_text += f"Match: {sample.match_id}{link_badge}<br>"
             if sample.timestamp: meta_text += f"Time: {sample.timestamp}"
             if not sample.match_id and not sample.timestamp:
                 meta_text += f"Image ID: {sample.image_path.split('/')[-1].split('.')[0] if sample.image_path else 'Unknown'}"

@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
         self.app_data: Optional[AppData] = None
 
         self.setWindowTitle("LoL Map Control Cluster Explorer")
-        self.resize(1280, 800)
+        self.resize(1024, 720)
         self.setStatusBar(QStatusBar(self))
 
         self.cluster_panel: Optional[ClusterPanel] = None

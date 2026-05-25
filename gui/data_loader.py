@@ -25,6 +25,9 @@ class RepresentativeSample:
     frame_id: Optional[str] = None
     timestamp: Optional[str] = None
     raw_summary: str = ""
+    link_method: Optional[str] = None
+    confidence: Optional[str] = None
+    link_notes: Optional[str] = None
 
 
 @dataclass
@@ -229,6 +232,11 @@ def _load_representative_samples(base_dir: Path, top_n: int = 5) -> Dict[int, Li
     df = _normalize_cluster_column(df)
     df = _coerce_cluster_ids(df)
 
+    links_df = None
+    links_path = base_dir / CLUSTERING_DIR / "replay_match_links.csv"
+    if links_path.exists():
+        links_df = pd.read_csv(links_path)
+
     summary_cols = [
         col for col in [
             "image_path",
@@ -268,9 +276,21 @@ def _load_representative_samples(base_dir: Path, top_n: int = 5) -> Dict[int, Li
                     stem = PureWindowsPath(label_file).stem
                     image_path_raw = f"../mid_dataset/images/{stem}.jpg"
 
+            # Check links
+            link_method, confidence, link_notes, match_id_linked = None, None, None, None
+            if links_df is not None:
+                image_id_raw = str(row.get("image_id", ""))
+                match_rows = links_df[links_df["sample_id"].astype(str) == image_id_raw]
+                if not match_rows.empty:
+                    match_row = match_rows.iloc[0]
+                    link_method = _safe_text(match_row.get("link_method", ""))
+                    confidence = _safe_text(match_row.get("confidence", ""))
+                    link_notes = _safe_text(match_row.get("notes", ""))
+                    match_id_linked = _safe_text(match_row.get("linked_match_id", ""))
+
             sample = RepresentativeSample(
                 image_path=image_path_raw or None,
-                match_id=_safe_text(
+                match_id=match_id_linked or _safe_text(
                     row["match_id"] if "match_id" in row.index else row["game_id"] if "game_id" in row.index else ""
                 ) or None,
                 frame_id=_safe_text(
@@ -280,6 +300,9 @@ def _load_representative_samples(base_dir: Path, top_n: int = 5) -> Dict[int, Li
                     row["timestamp"] if "timestamp" in row.index else row["game_time"] if "game_time" in row.index else ""
                 ) or None,
                 raw_summary=_build_sample_summary(row, summary_cols),
+                link_method=link_method or None,
+                confidence=confidence or None,
+                link_notes=link_notes or None,
             )
             samples.append(sample)
         result[int(cluster_id)] = samples
