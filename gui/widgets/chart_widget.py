@@ -3,7 +3,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from PyQt5.QtCore import Qt
 
 class ChartWidget(QWidget):
@@ -24,6 +24,7 @@ class ChartWidget(QWidget):
             spine.set_color('#1e2328')
             
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

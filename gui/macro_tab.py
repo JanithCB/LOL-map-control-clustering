@@ -8,7 +8,7 @@ from typing import Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout, QComboBox
+from PyQt5.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout, QComboBox, QSizePolicy
 
 from gui.data_loader import AppData, ClusterInfo, get_cluster_display_name
 
@@ -88,6 +88,8 @@ class MacroTab(QWidget):
         self.notes_heading.setStyleSheet("font-weight: bold; margin-top: 8px;")
 
         self.notes_text.setReadOnly(True)
+        self.notes_text.setLineWrapMode(QTextEdit.WidgetWidth)
+        self.notes_text.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.notes_text.setStyleSheet("""
             QTextEdit {
                 background-color: #091428; 
@@ -124,6 +126,7 @@ class MacroTab(QWidget):
         
         pacing_label = QLabel()
         pacing_label.setAlignment(Qt.AlignCenter)
+        pacing_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         pacing_label.setStyleSheet("background-color: #010a13; border: 1px solid #1e2328; border-radius: 4px; padding: 4px;")
         pacing_path = Path("outputs/figures/macro_pacing_chart.png")
         if pacing_path.exists():
@@ -134,6 +137,7 @@ class MacroTab(QWidget):
             
         obj_label = QLabel()
         obj_label.setAlignment(Qt.AlignCenter)
+        obj_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         obj_label.setStyleSheet("background-color: #010a13; border: 1px solid #1e2328; border-radius: 4px; padding: 4px;")
         obj_path = Path("outputs/figures/macro_objective_chart.png")
         if obj_path.exists():

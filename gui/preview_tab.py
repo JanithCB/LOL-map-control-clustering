@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import (
     QScrollArea,
     QGridLayout,
     QDialog,
+    QSizePolicy,
 )
 
 from gui.data_loader import AppData, ClusterInfo, RepresentativeSample, get_cluster_display_name
@@ -121,7 +122,9 @@ class PreviewTab(QWidget):
         # Thumbnail grid setup
         self.thumbnail_scroll = QScrollArea(self)
         self.thumbnail_scroll.setWidgetResizable(True)
+        self.thumbnail_scroll.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.thumbnail_container = QWidget()
+        self.thumbnail_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.thumbnail_grid = QGridLayout(self.thumbnail_container)
         self.thumbnail_grid.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.thumbnail_scroll.setWidget(self.thumbnail_container)

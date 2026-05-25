@@ -280,6 +280,12 @@ def _load_representative_samples(base_dir: Path, top_n: int = 5) -> Dict[int, Li
                 if "sample_path" in row.index
                 else ""
             )
+            
+            # Fallback for relative paths if run from inner directory
+            if image_path_raw:
+                p = Path(image_path_raw)
+                if not p.exists() and Path(f"../{image_path_raw}").exists():
+                    image_path_raw = f"../{image_path_raw}"
 
             if not image_path_raw and "label_file" in row.index:
                 label_file = _safe_text(row["label_file"])

@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QSizePolicy
 
 class ProjectionCanvas(FigureCanvas):
     """Embeds a 2D matplotlib scatter plot inside PyQt5 that highlights the selected cluster."""
@@ -13,6 +14,7 @@ class ProjectionCanvas(FigureCanvas):
         self.ax = self.fig.add_subplot(111)
         super().__init__(self.fig)
         self.setParent(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.proj_df = None
         self._load_data()
         
