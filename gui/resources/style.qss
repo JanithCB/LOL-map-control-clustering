@@ -1,2 +1,124 @@
 /* Qt Stylesheet for LoL Macro Playstyle Explorer */
-/* Dark theme inspired by League of Legends client */
+/* Dark theme inspired by League of Legends client (Hextech Theme) */
+
+QWidget {
+    background-color: #010a13;
+    color: #F0E6D2;
+    font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 13px;
+}
+
+/* Scrollbars */
+QScrollBar:vertical {
+    background: #010a13;
+    width: 12px;
+    margin: 0px;
+}
+QScrollBar::handle:vertical {
+    background: #1e2328;
+    border: 1px solid #c89b3c;
+    border-radius: 4px;
+    min-height: 20px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #2a3138;
+}
+
+QScrollBar:horizontal {
+    background: #010a13;
+    height: 12px;
+    margin: 0px;
+}
+QScrollBar::handle:horizontal {
+    background: #1e2328;
+    border: 1px solid #c89b3c;
+    border-radius: 4px;
+    min-width: 20px;
+}
+QScrollBar::handle:horizontal:hover {
+    background: #2a3138;
+}
+
+/* List Widget for Clusters */
+QListWidget {
+    background-color: #091428;
+    border: 1px solid #1e2328;
+    border-radius: 4px;
+    padding: 4px;
+    outline: none;
+}
+
+QListWidget::item {
+    background-color: transparent;
+    color: #A09B8C;
+    padding: 8px;
+    border-radius: 4px;
+    border-bottom: 1px solid #1e2328;
+}
+
+QListWidget::item:hover {
+    background-color: #1e2328;
+    color: #F0E6D2;
+    border-left: 2px solid #c89b3c;
+}
+
+QListWidget::item:selected {
+    background-color: #1e2328;
+    color: #c89b3c;
+    border: 1px solid #c89b3c;
+    font-weight: bold;
+}
+
+/* Labels */
+QLabel {
+    color: #F0E6D2;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: 1px solid #1e2328;
+    background: #010a13;
+    border-radius: 4px;
+}
+
+QTabBar::tab {
+    background: #091428;
+    color: #A09B8C;
+    padding: 8px 16px;
+    border: 1px solid #1e2328;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:hover {
+    background: #1e2328;
+    color: #F0E6D2;
+}
+
+QTabBar::tab:selected {
+    background: #1e2328;
+    color: #c89b3c;
+    border: 1px solid #c89b3c;
+    border-bottom: none;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #1e2328;
+    color: #F0E6D2;
+    border: 1px solid #c89b3c;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #2a3138;
+    border-color: #f0e6d2;
+}
+
+QPushButton:pressed {
+    background-color: #010a13;
+    color: #c89b3c;
+}

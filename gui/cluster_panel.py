@@ -67,7 +67,17 @@ class ClusterPanel(QWidget):
         self.list_widget.clear()
 
         for cluster_id, cluster_info in self.cluster_infos.items():
-            display_name = get_cluster_display_name(cluster_info)
+            label = cluster_info.label.strip()
+            
+            if not label or label.lower() == "cluster pattern review" or label.startswith("Cluster "):
+                label = "Unlabeled cluster"
+                
+            size_str = self._format_size(cluster_info.size)
+            pct_str = self._format_pct(cluster_info.pct)
+            
+            # Format: Cluster <id> – <manual_label>  (XX.XX%, n=XXXX)
+            display_name = f"Cluster {cluster_id} – {label}  ({pct_str}, n={size_str})"
+            
             item = QListWidgetItem(display_name)
             item.setData(Qt.UserRole, cluster_id)
             self.list_widget.addItem(item)
@@ -118,17 +128,20 @@ class ClusterPanel(QWidget):
 
     def _update_details(self, cluster_info: ClusterInfo) -> None:
         """Fill the quick details area for the selected cluster."""
-        label_text = cluster_info.label.strip() if cluster_info.label else f"Cluster {cluster_info.cluster_id}"
+        label_text = cluster_info.label.strip()
+        if not label_text or label_text.lower() == "cluster pattern review" or label_text.startswith("Cluster "):
+            label_text = "Unlabeled cluster"
+            
         description_text = cluster_info.description.strip() if cluster_info.description else "—"
 
         features = cluster_info.top_features[:5] if cluster_info.top_features else []
         features_text = ", ".join(features) if features else "—"
 
-        self.selected_label.setText(f"Label: {label_text}")
-        self.selected_size.setText(f"Size: {self._format_size(cluster_info.size)}")
-        self.selected_pct.setText(f"Percentage: {self._format_pct(cluster_info.pct)}")
-        self.selected_description.setText(f"Description: {description_text}")
-        self.selected_features.setText(f"Top features: {features_text}")
+        self.selected_label.setText(f"<b>Label:</b> {label_text}")
+        self.selected_size.setText(f"<b>Size:</b> {self._format_size(cluster_info.size)}")
+        self.selected_pct.setText(f"<b>Percentage:</b> {self._format_pct(cluster_info.pct)}")
+        self.selected_description.setText(f"<b>Description:</b> {description_text}")
+        self.selected_features.setText(f"<b>Top features:</b> {features_text}")
 
     def _clear_details(self) -> None:
         """Reset the quick details section."""
