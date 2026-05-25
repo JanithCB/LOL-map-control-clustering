@@ -34,8 +34,7 @@ def main():
             continue
             
         labels = df["cluster_label"]
-        drop_cols = ["cluster_label", "matchId", "summonerName", "participantId", "teamId", "win", "role", "lane"]
-        features = df.drop(columns=[col for col in drop_cols if col in df.columns])
+        features = df.select_dtypes(include=['number']).drop(columns=["cluster_label"], errors='ignore')
         
         reports = compute_cluster_explainability(features, labels, centroids)
         df_export, json_export = export_explainability(reports)

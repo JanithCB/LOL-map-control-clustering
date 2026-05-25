@@ -27,9 +27,7 @@ def main():
             continue
             
         labels = df["cluster_label"]
-        # Drop non-feature columns
-        drop_cols = ["cluster_label", "matchId", "summonerName", "participantId", "teamId", "win", "role", "lane"]
-        features = df.drop(columns=[col for col in drop_cols if col in df.columns])
+        features = df.select_dtypes(include=['number']).drop(columns=["cluster_label"], errors='ignore')
         
         runs_data.append({
             "features": features,
