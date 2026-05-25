@@ -10,6 +10,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QHeaderView
 
 from gui.data_loader import AppData, ClusterInfo, get_cluster_display_name
+try:
+    from src.comparison.cluster_macro_summaries import CLUSTER_MACRO_SUMMARIES
+except ImportError:
+    CLUSTER_MACRO_SUMMARIES = {}
 
 
 class MacroTab(QWidget):
@@ -122,9 +126,14 @@ class MacroTab(QWidget):
             f"<b>Selected cluster:</b> {get_cluster_display_name(cluster_info)}"
         )
 
+        macro_desc = CLUSTER_MACRO_SUMMARIES.get(
+            cluster_info.cluster_id, 
+            "This macro state demonstrates the team's localized control and pacing during this phase of the game."
+        )
+
         summary_text = (
             f"<b>Playstyle Summary:</b> {cluster_info.description or 'A distinct grouping pattern focused on specific map objectives.'} "
-            "This macro state demonstrates the team's localized control and pacing during this phase of the game."
+            f"{macro_desc}"
         )
         self.summary_label.setText(summary_text)
         self.summary_label.setStyleSheet("color: #E0E0E0; font-size: 13px; margin-bottom: 12px; line-height: 1.4;")

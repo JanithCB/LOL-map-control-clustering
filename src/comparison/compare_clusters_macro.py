@@ -226,6 +226,23 @@ def build_qualitative_comparison_notes(
     return pd.DataFrame(notes)
 
 
+def generate_per_cluster_macro_summaries(minimap_summary_df: pd.DataFrame) -> dict[int, str]:
+    """Generate concise 1-2 sentence plain-language macro summaries per cluster."""
+    summaries = {}
+    for _, row in minimap_summary_df.iterrows():
+        cluster_id = int(row['cluster_label'])
+        features = [str(row[c]) for c in ["top_feature_1", "top_feature_2", "top_feature_3"] if c in row and pd.notna(row[c])]
+        
+        if features:
+            f_str = ", ".join(features)
+            text = f"This map state is characterized by heavy spatial presence around {f_str}. In macro terms, this playstyle dictates specific objective pacing and map control phases."
+        else:
+            text = "This state exhibits mixed spatial traits, indicating a transitional or standard map control phase."
+        
+        summaries[cluster_id] = text
+    return summaries
+
+
 def save_comparison_outputs(
     minimap_summary_df: pd.DataFrame,
     macro_summary_df: pd.DataFrame,
@@ -233,7 +250,7 @@ def save_comparison_outputs(
     output_dir: str | Path,
 ) -> dict[str, Path]:
     """
-    Save comparison summary tables to CSV files.
+    Save comparison summary tables to CSV files, and export a Python macro summary mapping for the GUI.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -245,8 +262,19 @@ def save_comparison_outputs(
     minimap_summary_df.to_csv(minimap_path, index=False)
     macro_summary_df.to_csv(macro_path, index=False)
     notes_df.to_csv(notes_path, index=False)
+    
+    # Export python mapping for GUI
+    summaries = generate_per_cluster_macro_summaries(minimap_summary_df)
+    py_out = Path("src/comparison/cluster_macro_summaries.py")
+    py_out.parent.mkdir(parents=True, exist_ok=True)
+    with py_out.open("w", encoding="utf-8") as f:
+        f.write('"""Auto-generated macro summaries for GUI."""\n\n')
+        f.write("CLUSTER_MACRO_SUMMARIES = {\n")
+        for cid, text in summaries.items():
+            f.write(f'    {cid}: "{text}",\n')
+        f.write("}\n")
 
-    LOGGER.info("Saved comparison outputs to %s", output_dir)
+    LOGGER.info("Saved comparison outputs to %s and Python mapping to %s", output_dir, py_out)
 
     return {
         "minimap_cluster_comparison_summary": minimap_path,

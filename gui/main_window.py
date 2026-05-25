@@ -20,6 +20,8 @@ from gui.cluster_panel import ClusterPanel
 from gui.data_loader import AppData, load_app_data
 from gui.macro_tab import MacroTab
 from gui.preview_tab import PreviewTab
+from PyQt5.QtWidgets import QShortcut
+from PyQt5.QtGui import QKeySequence
 
 
 class MainWindow(QMainWindow):
@@ -136,6 +138,46 @@ class MainWindow(QMainWindow):
         if self.cluster_panel is None:
             return
         self.cluster_panel.select_first_cluster()
+
+        # Add F5 reload shortcut
+        self.reload_shortcut = QShortcut(QKeySequence("F5"), self)
+        self.reload_shortcut.activated.connect(self.reload_data)
+
+    def reload_data(self) -> None:
+        """Cleanly reload data and rebuild UI components."""
+        self.statusBar().showMessage("Reloading data from disk...", 2000)
+        
+        selected_id = None
+        if self.cluster_panel and self.cluster_panel.list_widget.currentItem():
+            selected_id = self.cluster_panel.list_widget.currentItem().data(Qt.UserRole)
+            
+        try:
+            self.app_data = load_app_data(self.base_dir)
+        except Exception as e:
+            self.statusBar().showMessage(f"Failed to reload data: {e}", 5000)
+            return
+
+        if self.cluster_panel:
+            self.cluster_panel.cluster_infos = dict(sorted(self.app_data.cluster_infos.items(), key=lambda item: item[0]))
+            self.cluster_panel._populate_clusters()
+            if selected_id is not None:
+                self.cluster_panel.set_cluster(selected_id)
+            else:
+                self.cluster_panel.select_first_cluster()
+                
+        if self.preview_tab:
+            self.preview_tab.app_data = self.app_data
+            if selected_id is not None:
+                self.preview_tab.set_cluster(selected_id)
+                
+        if self.macro_tab:
+            self.macro_tab.app_data = self.app_data
+            self.macro_tab._populate_table()
+            if selected_id is not None:
+                self.macro_tab.set_cluster(selected_id)
+
+        cluster_count = len(self.app_data.cluster_infos) if self.app_data else 0
+        self.statusBar().showMessage(f"Successfully reloaded {cluster_count} clusters.", 4000)
 
     def _on_cluster_changed(self, cluster_id: int) -> None:
         """Update status feedback when the selected cluster changes."""
