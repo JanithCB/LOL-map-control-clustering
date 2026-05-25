@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
 
         self.splitter.addWidget(self.cluster_panel)
         self.splitter.addWidget(self.tabs)
-        self.splitter.setSizes([320, 900])
+        self.splitter.setSizes([400, 1500])
 
     def _wire_signals(self) -> None:
         """Connect selection changes from the cluster panel to the detail tabs."""

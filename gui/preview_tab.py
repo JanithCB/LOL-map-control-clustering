@@ -209,8 +209,8 @@ class PreviewTab(QWidget):
             self.thumbnail_grid.addWidget(no_samples_label, 0, 0)
             return
 
-        columns = 3
-        max_samples = 6
+        columns = 4
+        max_samples = 8
 
         for i, sample in enumerate(samples[:max_samples]):
             row = i // columns
@@ -235,11 +235,11 @@ class PreviewTab(QWidget):
                     print(f"WARNING: Image not found at path: {img_path.resolve()}")
             
             if pixmap and not pixmap.isNull():
-                pixmap = pixmap.scaled(140, 140, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                pixmap = pixmap.scaled(240, 240, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 image_label.setPixmap(pixmap)
             else:
                 image_label.setText("<i>Thumbnail unavailable;<br>showing sample details</i>")
-                image_label.setFixedSize(140, 80)
+                image_label.setFixedSize(240, 135)
                 image_label.setStyleSheet("border: 1px dashed #555; background-color: #1e2328; color: #A09B8C; padding: 4px; border-radius: 4px;")
                 image_label.setAlignment(Qt.AlignCenter)
 
