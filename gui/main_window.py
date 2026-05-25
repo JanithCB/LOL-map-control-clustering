@@ -136,6 +136,10 @@ class MainWindow(QMainWindow):
             self.cluster_panel.clusterChanged.connect(self.macro_tab.set_cluster)
 
         self.cluster_panel.clusterChanged.connect(self._on_cluster_changed)
+        self.cluster_panel.algoChanged.connect(self._on_algo_changed)
+
+    def _on_algo_changed(self, algo: str) -> None:
+        self.reload_data(algo)
 
     def _initialize_default_selection(self) -> None:
         """Select the first cluster so the detail tabs have initial content."""
@@ -147,9 +151,14 @@ class MainWindow(QMainWindow):
         self.reload_shortcut = QShortcut(QKeySequence("F5"), self)
         self.reload_shortcut.activated.connect(self.reload_data)
 
-    def reload_data(self) -> None:
+    def reload_data(self, algo: str = None) -> None:
         """Cleanly reload data and rebuild UI components."""
-        self.statusBar().showMessage("Reloading data from disk...", 2000)
+        self.statusBar().showMessage(f"Reloading {algo or 'default'} data from disk...", 2000)
+        
+        if algo:
+            from gui import data_loader
+            from pathlib import Path
+            data_loader.CLUSTERING_DIR = Path("outputs") / "reports" / algo
         
         selected_id = None
         if self.cluster_panel and self.cluster_panel.list_widget.currentItem():

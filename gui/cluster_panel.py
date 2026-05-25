@@ -18,6 +18,7 @@ class ClusterPanel(QWidget):
     """Cluster selector and quick-detail panel for labeled clustering results."""
 
     clusterChanged = pyqtSignal(int)
+    algoChanged = pyqtSignal(str)
 
     def __init__(
         self,
@@ -48,11 +49,26 @@ class ClusterPanel(QWidget):
 
         self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.title_label.setStyleSheet("font-weight: bold; font-size: 16px;")
+        
+        from PyQt5.QtWidgets import QComboBox, QHBoxLayout
+        algo_layout = QHBoxLayout()
+        algo_layout.setContentsMargins(0, 0, 0, 4)
+        self.algo_label = QLabel("Algorithm:", self)
+        self.algo_dropdown = QComboBox(self)
+        self.algo_dropdown.addItems(["kmeans", "gmm", "clustering"])
+        
+        # Set dropdown style slightly muted
+        self.algo_dropdown.setStyleSheet("background-color: #010a13; color: #F0E6D2; border: 1px solid #1e2328; padding: 2px;")
+        
+        algo_layout.addWidget(self.algo_label)
+        algo_layout.addWidget(self.algo_dropdown)
+        algo_layout.addStretch()
 
         self.selected_description.setWordWrap(True)
         self.selected_features.setWordWrap(True)
 
         layout.addWidget(self.title_label)
+        layout.addLayout(algo_layout)
         layout.addWidget(self.list_widget)
         layout.addWidget(self.selected_label)
         layout.addWidget(self.selected_size)
@@ -85,6 +101,7 @@ class ClusterPanel(QWidget):
     def _connect_signals(self) -> None:
         """Connect selection events to the details panel and external signal."""
         self.list_widget.currentItemChanged.connect(self._on_current_item_changed)
+        self.algo_dropdown.currentTextChanged.connect(self.algoChanged.emit)
 
     def _format_size(self, value: object) -> str:
         if value is None:
