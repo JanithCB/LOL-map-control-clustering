@@ -117,16 +117,25 @@ class PreviewTab(QWidget):
         self.description_label.setWordWrap(True)
         self.top_features_label.setWordWrap(True)
 
-        top_layout = QVBoxLayout()
-        top_layout.addWidget(self.title_label)
-        top_layout.addWidget(self.cluster_name_label)
-        top_layout.addWidget(self.description_label)
-        top_layout.addWidget(self.top_features_label)
-        
-        # Add chart below the text
-        top_layout.addWidget(self.feature_chart)
+        from PyQt5.QtWidgets import QHBoxLayout
+        from gui.projection_canvas import ProjectionCanvas
 
-        main_layout.addLayout(top_layout)
+        top_h_layout = QHBoxLayout()
+        
+        left_layout = QVBoxLayout()
+        left_layout.addWidget(self.title_label)
+        left_layout.addWidget(self.cluster_name_label)
+        left_layout.addWidget(self.description_label)
+        left_layout.addWidget(self.top_features_label)
+        left_layout.addWidget(self.feature_chart)
+        
+        self.projection_canvas = ProjectionCanvas(self)
+        self.projection_canvas.update_cluster(None)
+        
+        top_h_layout.addLayout(left_layout, stretch=1)
+        top_h_layout.addWidget(self.projection_canvas, stretch=1)
+
+        main_layout.addLayout(top_h_layout)
         main_layout.addWidget(self.samples_title_label)
         main_layout.addWidget(self.thumbnail_scroll)
 
@@ -162,6 +171,10 @@ class PreviewTab(QWidget):
         
         # Update feature chart
         self.feature_chart.update_features(feature_subset)
+        
+        # Update Projection canvas highlight
+        if hasattr(self, 'projection_canvas'):
+            self.projection_canvas.update_cluster(cluster_info.cluster_id)
 
         self._rebuild_thumbnail_grid(cluster_info.representative_samples or [])
 
@@ -247,6 +260,7 @@ class PreviewTab(QWidget):
         """Reset preview content when no cluster is available."""
         self.cluster_name_label.setText("Selected cluster: —")
         self.description_label.setText("Description: —")
-        self.top_features_label.setText("Top features: —")
         self.feature_chart.update_features([])
+        if hasattr(self, 'projection_canvas'):
+            self.projection_canvas.update_cluster(None)
         self._rebuild_thumbnail_grid([])

@@ -43,8 +43,9 @@ class MacroTab(QWidget):
         self.notes_text = QTextEdit(self)
 
         self.table_heading = QLabel("Quantitative Comparison", self)
-        self.table_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #1e2328; padding-bottom: 4px;")
+        self.table_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid #1e2328; padding-bottom: 4px;")
         self.comparison_table = QTableWidget(self)
+        self.comparison_table.setMaximumHeight(180)  # Reduce visual dominance
         self.comparison_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.comparison_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.comparison_table.verticalHeader().setVisible(False)
@@ -97,6 +98,39 @@ class MacroTab(QWidget):
         layout.addWidget(self.cluster_label)
         layout.addWidget(self.summary_label)
         layout.addWidget(self.bullets_label)
+        
+        # Load charts side-by-side
+        from PyQt5.QtWidgets import QHBoxLayout
+        from PyQt5.QtGui import QPixmap
+        from pathlib import Path
+        
+        charts_layout = QHBoxLayout()
+        charts_layout.setSpacing(8)
+        
+        pacing_label = QLabel()
+        pacing_label.setAlignment(Qt.AlignCenter)
+        pacing_label.setStyleSheet("background-color: #010a13; border: 1px solid #1e2328; border-radius: 4px; padding: 4px;")
+        pacing_path = Path("outputs/figures/macro_pacing_chart.png")
+        if pacing_path.exists():
+            pixmap = QPixmap(str(pacing_path))
+            pacing_label.setPixmap(pixmap.scaled(450, 320, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            pacing_label.setText("<i>Pacing chart not generated yet.</i>")
+            
+        obj_label = QLabel()
+        obj_label.setAlignment(Qt.AlignCenter)
+        obj_label.setStyleSheet("background-color: #010a13; border: 1px solid #1e2328; border-radius: 4px; padding: 4px;")
+        obj_path = Path("outputs/figures/macro_objective_chart.png")
+        if obj_path.exists():
+            pixmap = QPixmap(str(obj_path))
+            obj_label.setPixmap(pixmap.scaled(450, 320, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            obj_label.setText("<i>Objective chart not generated yet.</i>")
+            
+        charts_layout.addWidget(pacing_label)
+        charts_layout.addWidget(obj_label)
+        layout.addLayout(charts_layout)
+
         layout.addWidget(self.notes_heading)
         layout.addWidget(self.notes_text)
         
