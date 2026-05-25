@@ -193,18 +193,18 @@ class PreviewTab(QWidget):
                 pixmap = pixmap.scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 image_label.setPixmap(pixmap)
             else:
-                image_label.setText("<i>Image not found;<br>showing metadata instead</i>")
+                image_label.setText("<i>Thumbnail unavailable;<br>showing sample details</i>")
                 image_label.setFixedSize(160, 100)
-                image_label.setStyleSheet("border: 1px dashed #555; color: #aaa; padding: 4px; border-radius: 4px;")
+                image_label.setStyleSheet("border: 1px dashed #555; background-color: #1e2328; color: #A09B8C; padding: 4px; border-radius: 4px;")
                 image_label.setAlignment(Qt.AlignCenter)
 
             layout.addWidget(image_label)
             
-            meta_text = f"<b>Sample {i+1}</b><br><span style='color: #888; font-size: 11px;'>"
+            meta_text = f"<b>Sample {i+1}</b><br><span style='color: #A09B8C; font-size: 11px;'>"
             if sample.match_id: meta_text += f"Match: {sample.match_id}<br>"
             if sample.timestamp: meta_text += f"Time: {sample.timestamp}"
             if not sample.match_id and not sample.timestamp:
-                meta_text += "No metadata"
+                meta_text += f"Image ID: {sample.image_path.split('/')[-1].split('.')[0] if sample.image_path else 'Unknown'}"
             meta_text += "</span>"
             
             caption = QLabel(meta_text)

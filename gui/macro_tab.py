@@ -43,10 +43,30 @@ class MacroTab(QWidget):
         self.notes_text = QTextEdit(self)
 
         self.table_heading = QLabel("Quantitative Comparison", self)
-        self.table_heading.setStyleSheet("font-weight: bold; margin-top: 8px;")
+        self.table_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #1e2328; padding-bottom: 4px;")
         self.comparison_table = QTableWidget(self)
         self.comparison_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.comparison_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.comparison_table.verticalHeader().setVisible(False)
+        self.comparison_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #010a13;
+                color: #F0E6D2;
+                gridline-color: #1e2328;
+                border: 1px solid #1e2328;
+                border-radius: 4px;
+            }
+            QHeaderView::section {
+                background-color: #091428;
+                color: #c89b3c;
+                font-weight: bold;
+                padding: 6px;
+                border: 1px solid #1e2328;
+            }
+            QTableWidget::item {
+                padding: 4px;
+            }
+        """)
 
         self._build_ui()
 
@@ -62,6 +82,15 @@ class MacroTab(QWidget):
         self.notes_heading.setStyleSheet("font-weight: bold; margin-top: 8px;")
 
         self.notes_text.setReadOnly(True)
+        self.notes_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #091428; 
+                color: #F0E6D2;
+                border: 1px solid #1e2328;
+                border-radius: 4px;
+                padding: 12px;
+            }
+        """)
         self.notes_text.setPlaceholderText("No macro notes available.")
 
         layout.addWidget(self.title_label)
@@ -106,7 +135,19 @@ class MacroTab(QWidget):
         
         for i, row in df.iterrows():
             for j, col in enumerate(df.columns):
-                item = QTableWidgetItem(str(row[col]))
+                val = row[col]
+                try:
+                    float_val = float(val)
+                    if str(col).lower() in ["proportion", "pct"]:
+                        formatted_val = f"{float_val:.2f}"
+                    elif float_val.is_integer():
+                        formatted_val = str(int(float_val))
+                    else:
+                        formatted_val = f"{float_val:.2f}"
+                except (ValueError, TypeError):
+                    formatted_val = str(val)
+                
+                item = QTableWidgetItem(formatted_val)
                 self.comparison_table.setItem(i, j, item)
 
     def set_cluster(self, cluster_id: int) -> None:
@@ -136,12 +177,12 @@ class MacroTab(QWidget):
             f"{macro_desc}"
         )
         self.summary_label.setText(summary_text)
-        self.summary_label.setStyleSheet("color: #E0E0E0; font-size: 13px; margin-bottom: 12px; line-height: 1.4;")
+        self.summary_label.setStyleSheet("color: #333333; font-size: 13px; margin-bottom: 12px; line-height: 1.4;")
 
         cluster_notes = cluster_info.notes.strip() if cluster_info.notes else ""
         global_notes = self.app_data.global_notes.strip() if self.app_data.global_notes else ""
         
-        bullets = cluster_info.summary_bullets if cluster_info.summary_bullets else self.app_data.global_summary_bullets
+        bullets = cluster_info.summary_bullets if cluster_info.summary_bullets else []
         if bullets:
             self.bullets_label.setText("\n".join(bullets))
             self.bullets_label.show()
@@ -150,16 +191,18 @@ class MacroTab(QWidget):
 
         if cluster_notes:
             self.notes_heading.setText("<b>Cluster-specific Playstyle Notes</b>")
-            self.notes_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 12px; margin-bottom: 4px; border-bottom: 1px solid #1e2328;")
-            formatted_notes = cluster_notes.replace(" || ", "<br><br><b>Sector Notes:</b><br>").replace(" | ", "<br>• ")
-            self.notes_text.setHtml(f"<div style='line-height: 1.5; color: #F0E6D2; font-size: 13px;'>{formatted_notes}</div>")
+            self.notes_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid #1e2328; padding-bottom: 4px;")
+            formatted_notes = cluster_notes.replace(" || ", "<br><br><b style='color:#0AC8B9;'>Sector Notes:</b><br>").replace(" | ", "<br>• ")
+            self.notes_text.setHtml(f"<div style='line-height: 1.6; font-size: 13px;'>{formatted_notes}</div>")
             return
 
         if global_notes:
             self.notes_heading.setText("<b>Global Comparison Notes</b>")
-            self.notes_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 12px; margin-bottom: 4px; border-bottom: 1px solid #1e2328;")
-            formatted_notes = global_notes.replace("\n", "<br>")
-            self.notes_text.setHtml(f"<div style='line-height: 1.5; color: #F0E6D2; font-size: 13px;'>{formatted_notes}</div>")
+            self.notes_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid #1e2328; padding-bottom: 4px;")
+            formatted_notes = global_notes.replace(" || ", "<br><br>").replace(" | ", "<br>• ")
+            if formatted_notes and not formatted_notes.startswith("<br>"):
+                formatted_notes = "• " + formatted_notes
+            self.notes_text.setHtml(f"<div style='line-height: 1.6; font-size: 13px;'>{formatted_notes}</div>")
             return
 
         self.notes_heading.setText("Notes")

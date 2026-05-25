@@ -119,12 +119,15 @@ def representative_samples(
                 image_id = str(sample["image_id"])
                 row["image_id"] = image_id
                 
-                img_dir = Path("..") / "mid_dataset" / "images"
                 resolved_path = ""
+                # Derive absolute path to the images folder relative to this file
+                img_dir = Path(__file__).resolve().parents[3] / "mid_dataset" / "images"
+                    
                 for ext in [".jpg", ".png", ".jpeg"]:
                     test_path = img_dir / f"{image_id}{ext}"
                     if test_path.exists():
-                        resolved_path = f"../mid_dataset/images/{image_id}{ext}"
+                        # GUI needs absolute paths for reliable QPixmap loading on all OS
+                        resolved_path = str(test_path.resolve()).replace('\\', '/')
                         break
                         
                 if not resolved_path:
