@@ -106,7 +106,6 @@ def summarize_macro_styles_for_comparison(macro_df: pd.DataFrame) -> pd.DataFram
     """
     style_cols = [
         "objective_focus",
-        "pace_style",
         "neutral_focus",
         "game_length_style",
     ]

@@ -1,0 +1,39 @@
+# configs/pipeline_config.yaml
+# Unified pipeline configuration file
+
+paths:
+  raw:
+    labels_dir: "../mid_dataset/labels"
+    images_dir: "../mid_dataset/images"
+    names_path: "../mid.names"
+    ranked_games_csv: "../games.csv"
+  
+  configs:
+    zones_config: "configs/map_zones.yaml"
+    clustering_config: "configs/clustering_config.yaml"
+    macro_config: "configs/macro_config.yaml"
+    
+  output:
+    root: "."
+    clustering_dir: "outputs/reports/clustering"
+    plots_dir: "outputs/figures/clustering"
+    macro_dir: "outputs/reports/macro"
+    comparison_dir: "outputs/reports/comparison"
+
+pipeline:
+  run_clustering: true
+  run_macro_analysis: true
+  run_projections: true
+  run_explainability: true
+  
+clustering_settings:
+  method: "kmeans"
+  k: 5
+  
+projection_settings:
+  method: "umap"
+  n_components: 2
+  
+export:
+  save_charts: true
+  format: "png"

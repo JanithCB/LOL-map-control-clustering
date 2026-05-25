@@ -1,0 +1,40 @@
+{
+    "status": "pass",
+    "checks": [
+        {
+            "name": "snapshot_features_exists_and_not_empty",
+            "status": "pass",
+            "details": ""
+        },
+        {
+            "name": "snapshot_features_columns",
+            "status": "pass",
+            "details": ""
+        },
+        {
+            "name": "clustered_data_valid",
+            "status": "pass",
+            "details": ""
+        },
+        {
+            "name": "representative_samples_valid",
+            "status": "pass",
+            "details": ""
+        },
+        {
+            "name": "macro_summary_exists",
+            "status": "pass",
+            "details": ""
+        },
+        {
+            "name": "projection_output_exists",
+            "status": "pass",
+            "details": ""
+        },
+        {
+            "name": "clustering_plots_exist",
+            "status": "pass",
+            "details": ""
+        }
+    ]
+}
