@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (
 )
 
 from gui.data_loader import AppData, ClusterInfo, RepresentativeSample, get_cluster_display_name
-from gui.feature_chart import FeatureBarChart
+from gui.widgets.chart_widget import ChartWidget
 
 
 class ClickableLabel(QLabel):
@@ -99,9 +99,24 @@ class PreviewTab(QWidget):
         self.description_label = QLabel("Description: —", self)
         self.top_features_label = QLabel("Top features: —", self)
         
-        self.feature_chart = FeatureBarChart(self)
+        self.feature_chart = ChartWidget(self)
 
+        # Explainability Panel
+        self.explain_title = QLabel("Why this cluster is distinct", self)
+        self.explain_title.setStyleSheet("font-weight: bold; font-size: 14px; color: #c89b3c;")
+        self.explain_summary = QLabel("—", self)
+        self.explain_summary.setWordWrap(True)
+        self.explain_summary.setStyleSheet("font-style: italic; color: #A09B8C; margin-bottom: 8px;")
+
+        # Sorting controls
         self.samples_title_label = QLabel("Representative samples", self)
+        
+        from PyQt5.QtWidgets import QComboBox, QHBoxLayout
+        self.sort_combo = QComboBox(self)
+        self.sort_combo.addItems(["Most Representative (Closest)", "Most Unusual (Farthest)"])
+        self.sort_combo.currentIndexChanged.connect(self._on_sort_changed)
+        self.sort_combo.setStyleSheet("background-color: #010a13; color: #F0E6D2; border: 1px solid #1e2328; padding: 2px;")
+        self.sort_combo.setFixedWidth(200)
         
         # Thumbnail grid setup
         self.thumbnail_scroll = QScrollArea(self)
@@ -135,6 +150,11 @@ class PreviewTab(QWidget):
         left_layout.addWidget(self.cluster_name_label)
         left_layout.addWidget(self.description_label)
         left_layout.addWidget(self.top_features_label)
+        
+        # Add explainability
+        left_layout.addWidget(self.explain_title)
+        left_layout.addWidget(self.explain_summary)
+        
         left_layout.addWidget(self.feature_chart)
         
         self.projection_canvas = ProjectionCanvas(self)
@@ -146,7 +166,13 @@ class PreviewTab(QWidget):
         bottom_widget = QWidget()
         bottom_layout = QVBoxLayout(bottom_widget)
         bottom_layout.setContentsMargins(0, 0, 0, 0)
-        bottom_layout.addWidget(self.samples_title_label)
+        
+        controls_layout = QHBoxLayout()
+        controls_layout.addWidget(self.samples_title_label)
+        controls_layout.addStretch()
+        controls_layout.addWidget(self.sort_combo)
+        
+        bottom_layout.addLayout(controls_layout)
         bottom_layout.addWidget(self.thumbnail_scroll)
 
         # Use QSplitter to allow resizing between top details and bottom thumbnails
@@ -187,17 +213,49 @@ class PreviewTab(QWidget):
         features_text = ", ".join(feature_subset) if feature_subset else "—"
         self.top_features_label.setText(f"Top features: {features_text}")
         
+        # Update explainability
+        if cluster_info.explain_summary:
+            self.explain_summary.setText(cluster_info.explain_summary)
+        else:
+            self.explain_summary.setText("Explainability data not available.")
+
         # Update feature chart
-        self.feature_chart.update_features(feature_subset)
+        chart_data = {}
+        for feature_str in cluster_info.top_features[:5]:
+            try:
+                name = feature_str.rsplit('(', 1)[0].strip()
+                val = float(feature_str.rsplit('(', 1)[1].strip(')'))
+                chart_data[name] = val
+            except Exception:
+                chart_data[feature_str] = 1.0
+                
+        self.feature_chart.plot_bar_chart(chart_data, title="Top Features vs Average")
         
         # Update Projection canvas highlight
         if hasattr(self, 'projection_canvas'):
             self.projection_canvas.update_cluster(cluster_info.cluster_id)
 
-        self._rebuild_thumbnail_grid(cluster_info.representative_samples or [])
+        self._rebuild_thumbnail_grid()
 
-    def _rebuild_thumbnail_grid(self, samples: list[RepresentativeSample]) -> None:
+    def _on_sort_changed(self, index: int) -> None:
+        self._rebuild_thumbnail_grid()
+
+    def _rebuild_thumbnail_grid(self) -> None:
         """Clear and rebuild the thumbnail grid for the given samples."""
+        if self.current_cluster_id is None:
+            return
+            
+        cluster_info = self.app_data.cluster_infos.get(self.current_cluster_id)
+        if not cluster_info:
+            return
+            
+        samples = cluster_info.representative_samples or []
+        
+        # Default is already sorted by distance in data loader if read sequentially
+        # But if "Most Unusual" is selected, we reverse the list.
+        # Ideally, we should have distance data attached to sort properly.
+        if self.sort_combo.currentIndex() == 1:
+            samples = list(reversed(samples))
         # Clear existing items
         while self.thumbnail_grid.count():
             child = self.thumbnail_grid.takeAt(0)
@@ -280,7 +338,9 @@ class PreviewTab(QWidget):
         """Reset preview content when no cluster is available."""
         self.cluster_name_label.setText("Selected cluster: —")
         self.description_label.setText("Description: —")
-        self.feature_chart.update_features([])
+        self.explain_summary.setText("—")
+        self.feature_chart.clear()
         if hasattr(self, 'projection_canvas'):
             self.projection_canvas.update_cluster(None)
-        self._rebuild_thumbnail_grid([])
+        self.current_cluster_id = None
+        self._rebuild_thumbnail_grid()

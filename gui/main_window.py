@@ -109,7 +109,11 @@ class MainWindow(QMainWindow):
 
         self._clear_splitter()
 
-        self.cluster_panel = ClusterPanel(cluster_infos=self.app_data.cluster_infos, parent=self.splitter)
+        self.cluster_panel = ClusterPanel(
+            cluster_infos=self.app_data.cluster_infos, 
+            evaluation_metrics=self.app_data.evaluation_metrics,
+            parent=self.splitter
+        )
 
         self.tabs = QTabWidget(self.splitter)
         self.preview_tab = PreviewTab(app_data=self.app_data, parent=self.tabs)
@@ -172,7 +176,9 @@ class MainWindow(QMainWindow):
 
         if self.cluster_panel:
             self.cluster_panel.cluster_infos = dict(sorted(self.app_data.cluster_infos.items(), key=lambda item: item[0]))
+            self.cluster_panel.evaluation_metrics = self.app_data.evaluation_metrics
             self.cluster_panel._populate_clusters()
+            self.cluster_panel._update_eval_label(algo or self.cluster_panel.algo_dropdown.currentText())
             if selected_id is not None:
                 self.cluster_panel.set_cluster(selected_id)
             else:

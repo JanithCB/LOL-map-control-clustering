@@ -7,13 +7,10 @@ from __future__ import annotations
 from typing import Optional
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout, QComboBox
 
 from gui.data_loader import AppData, ClusterInfo, get_cluster_display_name
-try:
-    from src.comparison.cluster_macro_summaries import CLUSTER_MACRO_SUMMARIES
-except ImportError:
-    CLUSTER_MACRO_SUMMARIES = {}
 
 
 class MacroTab(QWidget):
@@ -30,8 +27,16 @@ class MacroTab(QWidget):
         self.current_cluster_id: Optional[int] = None
 
         self.title_label = QLabel("Macro context", self)
+        
+        self.view_filter = QComboBox(self)
+        self.view_filter.addItems(["All Views", "Narrative View", "Objective Charts", "Comparison Table"])
+        self.view_filter.currentIndexChanged.connect(self._on_view_changed)
+        self.view_filter.setStyleSheet("background-color: #010a13; color: #F0E6D2; border: 1px solid #1e2328; padding: 2px;")
+        
         self.cluster_label = QLabel("Selected cluster: —", self)
         
+        self.narrative_heading = QLabel("Narrative Summary", self)
+        self.narrative_heading.setStyleSheet("font-size: 15px; color: #c89b3c; margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid #1e2328; padding-bottom: 4px;")
         self.summary_label = QLabel("This panel compares macro context and qualitative notes for the selected cluster.", self)
         self.summary_label.setWordWrap(True)
         self.summary_label.setStyleSheet("color: #666; font-style: italic; margin-bottom: 8px;")
@@ -94,14 +99,24 @@ class MacroTab(QWidget):
         """)
         self.notes_text.setPlaceholderText("No macro notes available.")
 
-        layout.addWidget(self.title_label)
+        top_layout = QHBoxLayout()
+        top_layout.addWidget(self.title_label)
+        top_layout.addStretch()
+        top_layout.addWidget(QLabel("View:"))
+        top_layout.addWidget(self.view_filter)
+        
+        layout.addLayout(top_layout)
         layout.addWidget(self.cluster_label)
-        layout.addWidget(self.summary_label)
-        layout.addWidget(self.bullets_label)
+        
+        self.narrative_widget = QWidget()
+        narrative_layout = QVBoxLayout(self.narrative_widget)
+        narrative_layout.setContentsMargins(0, 0, 0, 0)
+        narrative_layout.addWidget(self.narrative_heading)
+        narrative_layout.addWidget(self.summary_label)
+        narrative_layout.addWidget(self.bullets_label)
+        layout.addWidget(self.narrative_widget)
         
         # Load charts side-by-side
-        from PyQt5.QtWidgets import QHBoxLayout
-        from PyQt5.QtGui import QPixmap
         from pathlib import Path
         
         charts_layout = QHBoxLayout()
@@ -129,10 +144,17 @@ class MacroTab(QWidget):
             
         charts_layout.addWidget(pacing_label)
         charts_layout.addWidget(obj_label)
-        layout.addLayout(charts_layout)
 
-        layout.addWidget(self.notes_heading)
-        layout.addWidget(self.notes_text)
+        self.charts_widget = QWidget()
+        self.charts_widget.setLayout(charts_layout)
+        layout.addWidget(self.charts_widget)
+
+        self.notes_widget = QWidget()
+        notes_layout = QVBoxLayout(self.notes_widget)
+        notes_layout.setContentsMargins(0, 0, 0, 0)
+        notes_layout.addWidget(self.notes_heading)
+        notes_layout.addWidget(self.notes_text)
+        layout.addWidget(self.notes_widget)
         
         if self.app_data.quantitative_comparison is not None:
             layout.addWidget(self.table_heading)
@@ -143,6 +165,18 @@ class MacroTab(QWidget):
             self.comparison_table.hide()
 
         self.setLayout(layout)
+
+    def _on_view_changed(self, index: int) -> None:
+        text = self.view_filter.currentText()
+        show_all = text == "All Views"
+        
+        self.narrative_widget.setVisible(show_all or text == "Narrative View")
+        self.notes_widget.setVisible(show_all or text == "Narrative View")
+        self.charts_widget.setVisible(show_all or text == "Objective Charts")
+        
+        has_table = self.app_data.quantitative_comparison is not None
+        self.table_heading.setVisible(has_table and (show_all or text == "Comparison Table"))
+        self.comparison_table.setVisible(has_table and (show_all or text == "Comparison Table"))
 
     def _populate_table(self):
         """Populate the quantitative comparison table if data is available."""
@@ -201,15 +235,17 @@ class MacroTab(QWidget):
             f"<b>Selected cluster:</b> {get_cluster_display_name(cluster_info)}"
         )
 
-        macro_desc = CLUSTER_MACRO_SUMMARIES.get(
-            cluster_info.cluster_id, 
-            "This macro state demonstrates the team's localized control and pacing during this phase of the game."
-        )
+        macro_desc = cluster_info.macro_story if cluster_info.macro_story else "Qualitative interpretation."
+        tendency = cluster_info.macro_tendency if cluster_info.macro_tendency else "Unknown Tendency"
+        caution = cluster_info.macro_caution if cluster_info.macro_caution else ""
 
         summary_text = (
-            f"<b>Playstyle Summary:</b> {cluster_info.description or 'A distinct grouping pattern focused on specific map objectives.'} "
-            f"{macro_desc}"
+            f"<b>Playstyle Tendency:</b> {tendency}<br><br>"
+            f"<b>Narrative:</b> {macro_desc}"
         )
+        if caution:
+            summary_text += f"<br><br><span style='color: #c89b3c;'><i>Note: {caution}</i></span>"
+            
         self.summary_label.setText(summary_text)
         self.summary_label.setStyleSheet("color: #333333; font-size: 13px; margin-bottom: 12px; line-height: 1.4;")
 

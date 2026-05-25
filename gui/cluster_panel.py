@@ -23,11 +23,13 @@ class ClusterPanel(QWidget):
     def __init__(
         self,
         cluster_infos: Dict[int, ClusterInfo],
+        evaluation_metrics: Dict[str, Dict[str, float]] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
 
         self.cluster_infos = dict(sorted(cluster_infos.items(), key=lambda item: item[0]))
+        self.evaluation_metrics = evaluation_metrics or {}
 
         self.title_label = QLabel("Clusters", self)
         self.list_widget = QListWidget(self)
@@ -60,6 +62,9 @@ class ClusterPanel(QWidget):
         # Set dropdown style slightly muted
         self.algo_dropdown.setStyleSheet("background-color: #010a13; color: #F0E6D2; border: 1px solid #1e2328; padding: 2px;")
         
+        self.eval_label = QLabel("", self)
+        self.eval_label.setStyleSheet("color: #A09B8C; font-size: 11px; margin-bottom: 4px;")
+        
         algo_layout.addWidget(self.algo_label)
         algo_layout.addWidget(self.algo_dropdown)
         algo_layout.addStretch()
@@ -69,6 +74,7 @@ class ClusterPanel(QWidget):
 
         layout.addWidget(self.title_label)
         layout.addLayout(algo_layout)
+        layout.addWidget(self.eval_label)
         layout.addWidget(self.list_widget)
         layout.addWidget(self.selected_label)
         layout.addWidget(self.selected_size)
@@ -101,7 +107,22 @@ class ClusterPanel(QWidget):
     def _connect_signals(self) -> None:
         """Connect selection events to the details panel and external signal."""
         self.list_widget.currentItemChanged.connect(self._on_current_item_changed)
-        self.algo_dropdown.currentTextChanged.connect(self.algoChanged.emit)
+        self.algo_dropdown.currentTextChanged.connect(self._on_algo_changed)
+
+    def _on_algo_changed(self, algo: str) -> None:
+        self._update_eval_label(algo)
+        self.algoChanged.emit(algo)
+
+    def _update_eval_label(self, algo: str) -> None:
+        metrics = self.evaluation_metrics.get(algo, {})
+        if not metrics:
+            self.eval_label.setText("Evaluation: —")
+            return
+        
+        sil = metrics.get('silhouette_score', 0.0)
+        ch = metrics.get('calinski_harabasz_score', 0.0)
+        n_clusters = len(self.cluster_infos)
+        self.eval_label.setText(f"k={n_clusters} | Silhouette: {sil:.3f}")
 
     def _format_size(self, value: object) -> str:
         if value is None:

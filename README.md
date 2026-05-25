@@ -22,9 +22,10 @@ The pipeline generates clean interpretation artifacts in `outputs/reports/`:
 
 ## Desktop App
 The PyQt5 desktop application provides a polished exploration showcase:
-- **Cluster Panel (Left)**: Navigate through identified clusters with size and top-line metadata.
-- **Preview Tab (Right)**: View the cluster's centroid via a feature bar chart and examine a grid of representative minimap thumbnails.
-- **Macro Tab (Right)**: Read integrated cluster-specific macro notes and global context linking the pattern to match outcomes.
+- **Cluster Panel (Left)**: Navigate through identified clusters with size and top-line metadata. Toggle between different clustering algorithms (e.g., KMeans, GMM) and instantly see evaluation metrics like Silhouette Score.
+- **Preview Tab (Right)**: View the cluster's centroid via an interactive feature bar chart. Review the cluster explainability panel ("Why this cluster is distinct") and examine an adjustable grid of representative minimap thumbnails (sorted by centroid distance).
+- **Macro Tab (Right)**: Read integrated cluster-specific macro stories and global context linking the pattern to match outcomes. Filter views to see objective/pacing charts or a quantitative comparison table.
+- **Projection Tab (Right)**: Explore a 2D UMAP projection of the entire feature space, visualizing how individual clusters map onto the global distribution of map control states.
 
 ## Screenshots / GUI Preview
 *(Screenshots will be added here once generated)*
@@ -49,13 +50,22 @@ LOL ML project/
 
 ## How to Run
 
-1. **Run the Full Pipeline**: Conceptually (if enabled), `python run_pipeline.py` executes data loading, feature extraction, and clustering.
-2. **Cluster Interpretation**: `python -m src.clustering.interpret_clusters --export-py` generates the readable labels and CSV outputs.
-3. **Launch the Desktop App**: `python -m gui.main_window` or `python run_gui.py` to explore the generated insights visually.
+1. **Run the Full Pipeline**: Execute `python run_pipeline.py` to extract features and run core clustering.
+2. **Multi-Algorithm Clustering**: `python run_multi_clustering.py` to run KMeans, GMM, etc.
+3. **Generate Explainability & Evaluation**: 
+   - `python run_cluster_explainability.py`
+   - `python run_clustering_evaluation.py`
+4. **Generate Macro Stories & Portfolio**: 
+   - `python run_cluster_macro_story.py`
+   - `python run_export_portfolio_report.py`
+5. **Launch the Desktop App**: `python run_gui.py` to visually explore the generated insights and evaluate algorithm performance.
 
 ## Project Highlights
 - **Computer Vision Pipeline**: Custom YOLO parsing on a noisy domain-specific dataset.
-- **Domain-Specific Feature Engineering**: Transforming raw (x,y) positions into strategic League of Legends concepts.
-- **Unsupervised Learning**: Discovering implicit structures in player behavior without explicit labeling.
-- **Qualitative Interpretation Layer**: Bridging the gap between raw math (centroids) and human insights.
-- **PyQt Desktop Showcase**: A robust, portfolio-ready interactive tool to demonstrate the clustering results.
+- **Domain-Specific Spatial Feature Engineering**: Transforming raw (x,y) positions into strategic League of Legends concepts like "grouping", "split pushing", and "objective control".
+- **Unsupervised Learning & Evaluation**: Discovering implicit structures in player behavior using multi-algorithm approaches (KMeans, GMM, HDBSCAN) and quantitatively evaluating them with Silhouette, Davies-Bouldin, and Calinski-Harabasz metrics.
+- **Automated Cluster Explainability**: Dynamically generating plain-language narrative summaries of what makes a cluster distinct compared to the global average.
+- **2D Projection Visualization**: Mapping complex, high-dimensional map states into intuitive 2D UMAP interactive scatter plots.
+- **Replay Linkage**: Linking static screenshots back to structural match metadata to surface concrete win rates, pacing, and macro patterns.
+- **Automated Portfolio Reporting**: Programmatically exporting the entire analysis pipeline into a clean, markdown-formatted portfolio report.
+- **PyQt Desktop Showcase**: A robust, interactive tool built with Python and Qt to demonstrate the clustering results directly to stakeholders.

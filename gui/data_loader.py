@@ -17,6 +17,10 @@ CLUSTER_LABELS_PATH = CLUSTERING_DIR / "cluster_labels.csv"
 REPRESENTATIVE_SAMPLES_PATH = CLUSTERING_DIR / "representative_samples.csv"
 QUALITATIVE_NOTES_PATH = COMPARISON_DIR / "qualitative_comparison_notes.csv"
 
+CLUSTER_EXPLAINABILITY_PATH = CLUSTERING_DIR / "cluster_explainability.csv"
+CLUSTER_MACRO_STORY_PATH = CLUSTERING_DIR / "cluster_macro_story.csv"
+CLUSTERING_EVALUATION_PATH = CLUSTERING_DIR / "clustering_evaluation.csv"
+
 
 @dataclass
 class RepresentativeSample:
@@ -41,6 +45,13 @@ class ClusterInfo:
     representative_samples: List[RepresentativeSample] = field(default_factory=list)
     notes: str = ""
     summary_bullets: List[str] = field(default_factory=list)
+    explain_summary: str = ""
+    top_positive: str = ""
+    top_distinguishing: str = ""
+    spread: Optional[float] = None
+    macro_tendency: str = ""
+    macro_story: str = ""
+    macro_caution: str = ""
 
 
 @dataclass
@@ -49,6 +60,7 @@ class AppData:
     global_notes: str = ""
     global_summary_bullets: List[str] = field(default_factory=list)
     quantitative_comparison: Optional[pd.DataFrame] = None
+    evaluation_metrics: Dict[str, Dict[str, float]] = field(default_factory=dict)
 
 
 def _read_csv(path: Path) -> pd.DataFrame:
@@ -368,6 +380,72 @@ def _load_quantitative_comparison(base_dir: Path) -> Optional[pd.DataFrame]:
     return None
 
 
+def _load_explainability(base_dir: Path) -> Dict[int, dict]:
+    path = base_dir / CLUSTER_EXPLAINABILITY_PATH
+    if not path.exists():
+        return {}
+    df = _read_csv(path)
+    df = _normalize_cluster_column(df, required=False)
+    if "cluster_id" not in df.columns:
+        return {}
+        
+    df = _coerce_cluster_ids(df)
+    result = {}
+    for _, row in df.iterrows():
+        cluster_id = int(row["cluster_id"])
+        # If there are multiple algorithms in the same CSV, we pick the first match.
+        # Ideally, CLUSTERING_DIR is already algo-specific.
+        if cluster_id not in result:
+            result[cluster_id] = {
+                "explain_summary": _safe_text(row.get("summary")),
+                "top_positive": _safe_text(row.get("top_positive")),
+                "top_distinguishing": _safe_text(row.get("top_distinguishing")),
+                "spread": float(row["spread"]) if "spread" in row and pd.notna(row["spread"]) else None
+            }
+    return result
+
+def _load_macro_story(base_dir: Path) -> Dict[int, dict]:
+    path = base_dir / CLUSTER_MACRO_STORY_PATH
+    if not path.exists():
+        return {}
+    df = _read_csv(path)
+    df = _normalize_cluster_column(df, required=False)
+    if "cluster_id" not in df.columns:
+        return {}
+        
+    df = _coerce_cluster_ids(df)
+    result = {}
+    for _, row in df.iterrows():
+        cluster_id = int(row["cluster_id"])
+        if cluster_id not in result:
+            result[cluster_id] = {
+                "macro_tendency": _safe_text(row.get("likely_macro_tendency")),
+                "macro_story": _safe_text(row.get("narrative_story")),
+                "macro_caution": _safe_text(row.get("caution"))
+            }
+    return result
+
+def _load_evaluation(base_dir: Path) -> Dict[str, Dict[str, float]]:
+    path = base_dir / CLUSTERING_EVALUATION_PATH
+    if not path.exists():
+        return {}
+    df = _read_csv(path)
+    if "algorithm" not in df.columns:
+        return {}
+        
+    result = {}
+    for _, row in df.iterrows():
+        algo = str(row["algorithm"])
+        metrics = {}
+        for col in ["silhouette_score", "davies_bouldin_score", "calinski_harabasz_score"]:
+            if col in df.columns and pd.notna(row[col]):
+                try:
+                    metrics[col] = float(row[col])
+                except ValueError:
+                    pass
+        result[algo] = metrics
+    return result
+
 def get_cluster_display_name(cluster_info: ClusterInfo) -> str:
     label = cluster_info.label.strip() if cluster_info.label else ""
     if label:
@@ -383,6 +461,8 @@ def load_cluster_infos(base_dir: str | Path = ".") -> Dict[int, ClusterInfo]:
     top_features = _load_top_features(base)
     representative_samples = _load_representative_samples(base)
     notes_by_cluster, _, bullets_by_cluster, _ = _load_qualitative_notes(base)
+    explainability = _load_explainability(base)
+    macro_stories = _load_macro_story(base)
 
     cluster_ids = sorted(
         set(sizes.keys())
@@ -390,17 +470,25 @@ def load_cluster_infos(base_dir: str | Path = ".") -> Dict[int, ClusterInfo]:
         | set(top_features.keys())
         | set(representative_samples.keys())
         | set(notes_by_cluster.keys())
+        | set(explainability.keys())
+        | set(macro_stories.keys())
     )
 
     cluster_infos: Dict[int, ClusterInfo] = {}
     for cluster_id in cluster_ids:
         size_info = sizes.get(cluster_id, {})
         label_info = labels.get(cluster_id, {})
+        explain_info = explainability.get(cluster_id, {})
+        macro_info = macro_stories.get(cluster_id, {})
 
         size_value = size_info.get("size")
         if isinstance(size_value, float) and size_value.is_integer():
             size_value = int(size_value)
 
+        # Distance to centroid sorting: RepresentativeSample parsing
+        # Add distance_to_centroid logic if we want to sort, but currently we just load what is there.
+        # It's sorted by distance originally in CSV.
+        
         cluster_infos[cluster_id] = ClusterInfo(
             cluster_id=cluster_id,
             label=label_info.get("label", ""),
@@ -410,7 +498,14 @@ def load_cluster_infos(base_dir: str | Path = ".") -> Dict[int, ClusterInfo]:
             top_features=top_features.get(cluster_id, []),
             representative_samples=representative_samples.get(cluster_id, []),
             notes=notes_by_cluster.get(cluster_id, ""),
-            summary_bullets=bullets_by_cluster.get(cluster_id, [])
+            summary_bullets=bullets_by_cluster.get(cluster_id, []),
+            explain_summary=explain_info.get("explain_summary", ""),
+            top_positive=explain_info.get("top_positive", ""),
+            top_distinguishing=explain_info.get("top_distinguishing", ""),
+            spread=explain_info.get("spread"),
+            macro_tendency=macro_info.get("macro_tendency", ""),
+            macro_story=macro_info.get("macro_story", ""),
+            macro_caution=macro_info.get("macro_caution", "")
         )
 
     return cluster_infos
@@ -421,11 +516,13 @@ def load_app_data(base_dir: str | Path = ".") -> AppData:
     cluster_infos = load_cluster_infos(base)
     _, global_notes, _, global_bullets = _load_qualitative_notes(base)
     quant_comp = _load_quantitative_comparison(base)
+    eval_metrics = _load_evaluation(base)
     return AppData(
         cluster_infos=cluster_infos, 
         global_notes=global_notes,
         global_summary_bullets=global_bullets,
-        quantitative_comparison=quant_comp
+        quantitative_comparison=quant_comp,
+        evaluation_metrics=eval_metrics
     )
 
 
