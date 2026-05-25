@@ -36,14 +36,23 @@ class ClickableLabel(QLabel):
         dialog.setWindowTitle("Representative Sample")
         dialog.setMinimumSize(400, 400)
         layout = QVBoxLayout(dialog)
-        
+        has_image = False
         if self.sample.image_path:
-            img_label = QLabel()
-            pixmap = QPixmap(self.sample.image_path)
-            if not pixmap.isNull():
-                img_label.setPixmap(pixmap.scaled(800, 800, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                img_label.setAlignment(Qt.AlignCenter)
-            layout.addWidget(img_label)
+            from pathlib import Path
+            img_path = Path(self.sample.image_path)
+            if img_path.exists():
+                img_label = QLabel()
+                pixmap = QPixmap(str(img_path))
+                if not pixmap.isNull():
+                    img_label.setPixmap(pixmap.scaled(800, 800, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                    img_label.setAlignment(Qt.AlignCenter)
+                    layout.addWidget(img_label)
+                    has_image = True
+                    
+        if not has_image:
+            fallback_label = QLabel("<i>Thumbnail unavailable</i>")
+            fallback_label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(fallback_label)
             
         meta_label = QLabel()
         meta_text = []
@@ -187,7 +196,12 @@ class PreviewTab(QWidget):
             
             pixmap = None
             if sample.image_path:
-                pixmap = QPixmap(sample.image_path)
+                from pathlib import Path
+                img_path = Path(sample.image_path)
+                if img_path.exists():
+                    pixmap = QPixmap(str(img_path))
+                else:
+                    print(f"WARNING: Image not found at path: {img_path.resolve()}")
             
             if pixmap and not pixmap.isNull():
                 pixmap = pixmap.scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)

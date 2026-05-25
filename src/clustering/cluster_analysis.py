@@ -118,24 +118,14 @@ def representative_samples(
             if "image_id" in sample.index:
                 image_id = str(sample["image_id"])
                 row["image_id"] = image_id
-                
-                resolved_path = ""
-                # Derive absolute path to the images folder relative to this file
-                img_dir = Path(__file__).resolve().parents[3] / "mid_dataset" / "images"
-                    
-                for ext in [".jpg", ".png", ".jpeg"]:
-                    test_path = img_dir / f"{image_id}{ext}"
-                    if test_path.exists():
-                        # GUI needs absolute paths for reliable QPixmap loading on all OS
-                        resolved_path = str(test_path.resolve()).replace('\\', '/')
-                        break
-                        
-                if not resolved_path:
-                    LOGGER.warning("Could not resolve image file for image_id %s", image_id)
-                row["image_path"] = resolved_path
+                row["image_path"] = f"mid_dataset/images/{image_id}.jpg"
                 
             if "label_file" in sample.index:
-                row["label_file"] = sample["label_file"]
+                row["label_file"] = str(sample["label_file"])
+                if "image_path" not in row:
+                    from pathlib import PureWindowsPath
+                    stem = PureWindowsPath(row["label_file"]).stem
+                    row["image_path"] = f"mid_dataset/images/{stem}.jpg"
 
             results.append(row)
 

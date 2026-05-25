@@ -251,16 +251,25 @@ def _load_representative_samples(base_dir: Path, top_n: int = 5) -> Dict[int, Li
     for cluster_id, group in df.groupby("cluster_id"):
         samples: List[RepresentativeSample] = []
         for _, row in group.head(top_n).iterrows():
+            image_path_raw = _safe_text(
+                row["image_path"]
+                if "image_path" in row.index
+                else row["frame_path"]
+                if "frame_path" in row.index
+                else row["sample_path"]
+                if "sample_path" in row.index
+                else ""
+            )
+
+            if not image_path_raw and "label_file" in row.index:
+                label_file = _safe_text(row["label_file"])
+                if label_file:
+                    from pathlib import PureWindowsPath
+                    stem = PureWindowsPath(label_file).stem
+                    image_path_raw = f"../mid_dataset/images/{stem}.jpg"
+
             sample = RepresentativeSample(
-                image_path=_safe_text(
-                    row["image_path"]
-                    if "image_path" in row.index
-                    else row["frame_path"]
-                    if "frame_path" in row.index
-                    else row["sample_path"]
-                    if "sample_path" in row.index
-                    else ""
-                ) or None,
+                image_path=image_path_raw or None,
                 match_id=_safe_text(
                     row["match_id"] if "match_id" in row.index else row["game_id"] if "game_id" in row.index else ""
                 ) or None,
